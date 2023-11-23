@@ -2,26 +2,26 @@ package application;
 	
 import javafx.application.Application;
 import javafx.stage.Stage;
-import javafx.scene.Scene;
-import javafx.scene.layout.BorderPane;
+import application.Controleur.*;
+import application.Vue.*;
+import application.Modele.*;
+
 
 
 public class Main extends Application {
-	@Override
-	public void start(Stage primaryStage) {
-		try {
-			BorderPane root = new BorderPane();
-			Scene scene = new Scene(root,800,600);
-			scene.getStylesheets().add(getClass().getResource("Interface.xml").toExternalForm());
-			primaryStage.setScene(scene);
-			
-			primaryStage.show();
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public static void main(String[] args) {
-		launch(args);
-	}
+
+    @Override
+    public void start(Stage primaryStage) {
+        // Initialize model, view, and controller
+    	ShoppingCartModel model = new application.Modele.ShoppingCartModel();
+    	ShoppingCartView view = new application.Vue.ShoppingCartView(primaryStage);
+    	ShoppingCartController controller = new application.Controleur.ShoppingCartController(model, view);
+
+        // Show the main view
+        view.show();
+    }
+    
+    public static void main(String[] args) {
+        launch(args);
+    }
 }
