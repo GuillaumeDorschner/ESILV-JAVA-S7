@@ -31,5 +31,19 @@ public class ShoppingCartController {
         }
         view.updateProductListView(productDetails);
     }
+    
+    public void addProduct() {
+    	
+    }
+    
+    public void deleteProduct() {
+    	
+    }
+    
+    public void modifyProduct() {
+    	
+    }
+    
+    
 
 }

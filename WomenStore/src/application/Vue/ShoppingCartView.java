@@ -2,7 +2,9 @@ package application.Vue;
 
 import application.Controleur.ShoppingCartController;
 import application.Modele.Product;
+
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
@@ -25,19 +27,33 @@ public class ShoppingCartView {
     }
     
     public void show(ShoppingCartController controller) {
-        stage.setTitle("Shopping Cart App");
+        stage.setTitle("Management of the Shopping Cart App");
 
         BorderPane mainLayout = new BorderPane();
 
         mainLayout.setTop(createMenuBar());
-        mainLayout.setLeft(createProductNavigation(controller));
-        mainLayout.setCenter(createProductListView());
+        mainLayout.setLeft(createProductCategoryButtons(controller));
+
+        // Create a VBox to stack the action buttons above the product list
+        VBox centerLayout = new VBox();
+        centerLayout.setAlignment(Pos.TOP_CENTER);
+        centerLayout.setSpacing(10);
+
+        // Add the action buttons
+        centerLayout.getChildren().add(createProductActionButtons(controller));
+
+        // Add the product list (you may replace this with your actual product list view)
+        centerLayout.getChildren().add(createProductListView());
+
+        mainLayout.setCenter(centerLayout);
         mainLayout.setRight(createBasketView(controller));
 
         Scene scene = new Scene(mainLayout, 800, 600);
         stage.setScene(scene);
         stage.show();
     }
+    
+    /******************************/
     
     private MenuBar createMenuBar() {
 
@@ -50,21 +66,21 @@ public class ShoppingCartView {
 
         return menuBar;
     }
- /******************************/
-    
-    private VBox createProductNavigation(ShoppingCartController controller) {
+    /**************Buttons for different product categories****************/
+
+    private VBox createProductCategoryButtons(ShoppingCartController controller) {
         VBox productNavigation = new VBox();
 
-        Button clothesButton = createCategoryButton("Clothes", controller);
-        Button shoesButton = createCategoryButton("Shoes", controller);
-        Button accessoriesButton = createCategoryButton("Accessories", controller);
+        Button clothesButton = createProductCategoryButton("Clothes", controller);
+        Button shoesButton = createProductCategoryButton("Shoes", controller);
+        Button accessoriesButton = createProductCategoryButton("Accessories", controller);
 
         productNavigation.getChildren().addAll(clothesButton, shoesButton, accessoriesButton);
 
         return productNavigation;
     }
 
-    private Button createCategoryButton(String category, ShoppingCartController controller) {
+    private Button createProductCategoryButton(String category, ShoppingCartController controller) {
         Button button = new Button(category);
         button.setMinWidth(120); // Set a fixed width for all buttons
         VBox.setMargin(button, new Insets(10, 10, 0, 10)); // Add left and right margin
@@ -75,9 +91,46 @@ public class ShoppingCartView {
         return button;
     }
 
+    /**************Choose your actions****************/
+
+    private HBox createProductActionButtons(ShoppingCartController controller) {
+        HBox categoryButtons = new HBox(10); // Horizontal layout for buttons with spacing
+        categoryButtons.setAlignment(Pos.CENTER);
+
+        Button addButton = createProductActionButton("Add", controller);
+        Button deleteButton = createProductActionButton("Delete", controller);
+        Button modifyButton = createProductActionButton("Modify", controller);
+
+        categoryButtons.getChildren().addAll(addButton, deleteButton, modifyButton);
+
+        return categoryButtons;
+    }
+
+    private Button createProductActionButton(String action, ShoppingCartController controller) {
+        Button button = new Button(action);
+        button.setMinWidth(100); // Set a fixed size for all buttons
+
+        // Set action for the button based on the action type
+        switch (action) {
+            case "Add":
+                button.setOnAction(event -> controller.addProduct());
+                break;
+            case "Delete":
+                button.setOnAction(event -> controller.deleteProduct());
+                break;
+            case "Modify":
+                button.setOnAction(event -> controller.modifyProduct());
+                break;
+            default:
+                break;
+        }
+
+        return button;
+    }
+
     
-    /******************************/
     
+    /*************Buying/selling*****************/
     private ListView<String> createProductListView() {
         productListView.setPrefWidth(200);
         return productListView;

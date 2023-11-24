@@ -6,8 +6,6 @@ import application.Controleur.*;
 import application.Vue.*;
 import application.Modele.*;
 
-
-
 public class Main extends Application {
 
     @Override
