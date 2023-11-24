@@ -1,11 +1,10 @@
-package application.Controleur;
+package com.example.womenstore.controller;
 
-
-import application.Modele.Product;
+import com.example.womenstore.model.Product;
+import com.example.womenstore.model.ShoppingCartModel;
+import com.example.womenstore.view.ShoppingCartView;
 import java.util.ArrayList;
 import java.util.List;
-import application.Modele.ShoppingCartModel;
-import application.Vue.ShoppingCartView;
 
 
 public class ShoppingCartController {
@@ -21,7 +20,7 @@ public class ShoppingCartController {
     private void initController() {
         view.show(this);
     }
-    
+
     public void showProductCategory( String category ) {
         List<String> productDetails = new ArrayList<>();
         for (Product product : model.getProducts()) {
@@ -31,19 +30,19 @@ public class ShoppingCartController {
         }
         view.updateProductListView(productDetails);
     }
-    
+
     public void addProduct() {
-    	
+
     }
-    
+
     public void deleteProduct() {
-    	
+
     }
-    
+
     public void modifyProduct() {
-    	
+
     }
-    
-    
+
+
 
 }
