@@ -1,42 +1,38 @@
 package application.Vue;
 
-import application.Modele.*;
-import application.Controleur.*;
+import application.Controleur.ShoppingCartController;
+import application.Modele.Product;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.util.List;
+
 public class ShoppingCartView {
-	
 	private Stage stage;
-    private ShoppingCartController controller;
+    private ListView<String> productListView;
+    private VBox basketView;
+    private Label totalPriceLabel;
 
     public ShoppingCartView(Stage stage) {
         this.stage = stage;
+        productListView = new ListView<>();
+        totalPriceLabel = new Label("Total Price: $0.0");
     }
     
-    public void setController(ShoppingCartController controller) {
-        this.controller = controller;
-    }
-    
-    public void show() {
-        stage.setTitle("Shopping App");
+    public void show(ShoppingCartController controller) {
+        stage.setTitle("Shopping Cart App");
 
-        // Create main layout
         BorderPane mainLayout = new BorderPane();
 
-        // Create menu bar
-        MenuBar menuBar = createMenuBar();
-        mainLayout.setTop(menuBar);
-
-        // Create product view
-        VBox productView = createProductView();
-        mainLayout.setCenter(productView);
-
-        // Create shopping basket view
-        VBox basketView = createBasketView();
-        mainLayout.setRight(basketView);
+        mainLayout.setTop(createMenuBar());
+        mainLayout.setLeft(createProductNavigation(controller));
+        mainLayout.setCenter(createProductListView());
+        mainLayout.setRight(createBasketView(controller));
 
         Scene scene = new Scene(mainLayout, 800, 600);
         stage.setScene(scene);
@@ -44,53 +40,65 @@ public class ShoppingCartView {
     }
     
     private MenuBar createMenuBar() {
+
         MenuBar menuBar = new MenuBar();
         Menu fileMenu = new Menu("File");
         MenuItem exitMenuItem = new MenuItem("Exit");
-        exitMenuItem.setOnAction(event -> System.exit(0));
+        exitMenuItem.setOnAction(e -> stage.close());
         fileMenu.getItems().add(exitMenuItem);
         menuBar.getMenus().add(fileMenu);
+
         return menuBar;
     }
+ /******************************/
+    
+    private VBox createProductNavigation(ShoppingCartController controller) {
+        VBox productNavigation = new VBox();
 
-    private VBox createProductView() {
-        VBox productView = new VBox();
+        Button clothesButton = createCategoryButton("Clothes", controller);
+        Button shoesButton = createCategoryButton("Shoes", controller);
+        Button accessoriesButton = createCategoryButton("Accessories", controller);
 
-        // Create instances of Clothes, Shoes, and Accessories
-        Clothes clothes = new Clothes("T-shirt", 19.99, 2, 40);
-        Shoes shoes = new Shoes("Sneakers", 49.99, 6, 38);
-        Accessories accessories = new Accessories("Sunglasses", 29.99, 4);
+        productNavigation.getChildren().addAll(clothesButton, shoesButton, accessoriesButton);
 
-        // Add product items, each represented by a button or other UI components
-        // Handle button clicks to view details or add to the basket
-        Button viewDetailsButtonClothes = createProductButton(clothes);
-        Button viewDetailsButtonShoes = createProductButton(shoes);
-        Button viewDetailsButtonAccessories = createProductButton(accessories);
-        productView.getChildren().addAll(viewDetailsButtonClothes, viewDetailsButtonShoes, viewDetailsButtonAccessories);
-
-        // Add more products as needed
-        return productView;
+        return productNavigation;
     }
 
-    private Button createProductButton(Product product) {
-        Button productButton = new Button("View Details");
-        productButton.setOnAction(event -> controller.onProductSelected(product));
-        return productButton;
+    private Button createCategoryButton(String category, ShoppingCartController controller) {
+        Button button = new Button(category);
+        button.setMinWidth(120); // Set a fixed width for all buttons
+        VBox.setMargin(button, new Insets(10, 10, 0, 10)); // Add left and right margin
+
+        // Set action for the button
+        button.setOnAction(event -> controller.showProductCategory(category));
+
+        return button;
     }
 
-    private VBox createBasketView() {
-        VBox basketView = new VBox();
-        // Display the contents of the shopping basket
-        // This might involve listing items, quantities, and providing options to remove items
-        basketView.getChildren().add(new Label("Shopping Basket"));
+    
+    /******************************/
+    
+    private ListView<String> createProductListView() {
+        productListView.setPrefWidth(200);
+        return productListView;
+    }
+
+    private VBox createBasketView(ShoppingCartController controller) {
+        // Implementation for basket view
+        // ...
+
+        VBox basketView = new VBox(new Label("Basket"), new Button("Checkout")); // Example button for checkout
+        basketView.setSpacing(10);
+
         return basketView;
     }
 
-    public void showProductDetails(Product product, double discountedPrice) {
-        // Implement logic to show detailed information about the selected product
-        // This might involve creating a new window or updating the current view
-        System.out.println("View details clicked for " + product.toString() + ", Discounted Price: $" + discountedPrice);
+    public void updateProductListView(List<String> productDetails) {
+        productListView.getItems().setAll(productDetails);
     }
 
+    public void updateTotalPriceLabel(double totalPrice) {
+        totalPriceLabel.setText("Total Price: $" + totalPrice);
+    }
 
 }

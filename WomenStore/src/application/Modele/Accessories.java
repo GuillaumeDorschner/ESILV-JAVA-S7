@@ -12,6 +12,10 @@ public class Accessories extends Product{
   }
 
   @Override
+  public String getCategory() {
+      return "Accessories";
+  }
+  
   public void applyDiscount() {
     this.setPrice(this.getPrice()*(1-DISCOUNT_ACCESSORIES));
   }

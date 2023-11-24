@@ -17,8 +17,6 @@ public class Main extends Application {
     	ShoppingCartView view = new application.Vue.ShoppingCartView(primaryStage);
     	ShoppingCartController controller = new application.Controleur.ShoppingCartController(model, view);
 
-        // Show the main view
-        view.show();
     }
     
     public static void main(String[] args) {

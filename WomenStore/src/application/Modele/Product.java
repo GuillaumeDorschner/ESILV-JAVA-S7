@@ -83,8 +83,9 @@ public abstract class Product implements Discount,Comparable<Product>{
             ", nbItems=" + nbItems +
             '}';
   }
+  
+  public abstract String getCategory();
 
-  @Override
   public int compareTo(Product o) {
     return Double.compare(this.getPrice(), o.getPrice());
   }

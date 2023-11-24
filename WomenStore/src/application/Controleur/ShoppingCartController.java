@@ -2,6 +2,8 @@ package application.Controleur;
 
 
 import application.Modele.Product;
+import java.util.ArrayList;
+import java.util.List;
 import application.Modele.ShoppingCartModel;
 import application.Vue.ShoppingCartView;
 
@@ -17,12 +19,17 @@ public class ShoppingCartController {
     }
 
     private void initController() {
-        view.setController(this);
+        view.show(this);
+    }
+    
+    public void showProductCategory( String category ) {
+        List<String> productDetails = new ArrayList<>();
+        for (Product product : model.getProducts()) {
+            if (product.getCategory().equals(category)) {
+                productDetails.add(product.toString());
+            }
+        }
+        view.updateProductListView(productDetails);
     }
 
-    public void onProductSelected(Product product) {
-        double discountedPrice = product.getPrice();
-        view.showProductDetails(product, discountedPrice);
-        model.addToBasket(product);
-    }
 }

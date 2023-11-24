@@ -25,8 +25,12 @@ public class Clothes extends Product{
             " size=" + size +
             '}';
   }
-
+  
   @Override
+  public String getCategory() {
+      return "Clothes";
+  }
+
   public void applyDiscount() {
     this.setPrice(this.getPrice()*(1-DISCOUNT_CLOTHES));
   }
