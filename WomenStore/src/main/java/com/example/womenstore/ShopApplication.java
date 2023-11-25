@@ -14,6 +14,8 @@ public class ShopApplication extends Application {
         ShoppingCartView view = new ShoppingCartView(primaryStage);
         ShoppingCartController controller = new ShoppingCartController(model, view);
 
+        
+
     }
 
     public static void main(String[] args) {
