@@ -21,7 +21,7 @@ public class Clothes extends Product{
   public void setSize(int size) throws IllegalArgumentException {
     if(size>=36 && size <=50){
       this.size = size;
-    }else throw new IllegalArgumentException("Size is not valid");
+    }else throw new IllegalArgumentException("Size is not valid between 36 and 50");
   }
 
   @Override

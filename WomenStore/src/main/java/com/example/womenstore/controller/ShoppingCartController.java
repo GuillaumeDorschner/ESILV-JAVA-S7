@@ -86,11 +86,5 @@ public class ShoppingCartController {
             int quantity = Integer.parseInt(productNewDetails.get("Quantity"));
             model.modifyProduct(id,price,quantity);
         }
-
-
-
     }
-
-
-
 }
