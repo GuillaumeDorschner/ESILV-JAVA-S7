@@ -41,18 +41,12 @@ public abstract class Product implements Discount,Comparable<Product>{
       } else throw new IllegalArgumentException("Price is negative");
     }
 
-
-
   public int getNbItems() {
-    return nbItems;
+    return this.nbItems;
   }
 
   public void setNbItems(int nbItems) {
     this.nbItems = nbItems;
-  }
-
-  public static int getNb() {
-    return nb;
   }
 
   public static double getIncome() {
@@ -74,6 +68,7 @@ public abstract class Product implements Discount,Comparable<Product>{
       System.out.println("Purchase OK !");
     }else throw new IllegalArgumentException("Purchase with negative number !!");
   }
+
   @Override
   public String toString() {
     return "Product{" +
