@@ -98,19 +98,26 @@ public class ShoppingCartModel {
         addProductToDB(products.get(products.size()-1));
     }
 
-    public void modifyProduct(int id, double price, int quantity){
-        for(Product p : products){
-            if(p.getId() == id){
-                if(price != 0){
-                    p.setPrice(price);
-                }
-                if(quantity != 0){
-                    p.setNbItems(quantity);
-                }
-                modifyProductToDB(p);
+    public void modifyProduct(int id, double price, int quantity) {
+        List<Product> productsToModify = new ArrayList<>();
+
+        for (Product p : products) {
+            if (p.getId() == id) {
+                productsToModify.add(p);
             }
         }
+
+        for (Product p : productsToModify) {
+            if (price != 0) {
+                p.setPrice(price);
+            }
+            if (quantity != 0) {
+                p.setNbItems(quantity);
+            }
+            modifyProductToDB(p);
+        }
     }
+
     
     public void removeProduct(Product p){
         products.remove(p);
