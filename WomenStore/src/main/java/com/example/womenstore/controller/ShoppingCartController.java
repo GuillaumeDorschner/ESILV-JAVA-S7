@@ -76,8 +76,9 @@ public class ShoppingCartController {
 
     public void deleteProduct() {
         int id = view.askForProductID(this);
+        String category = checkIdProduct(id).getCategory();
         model.removeProduct(checkIdProduct(id));
-        showProductCategory(checkIdProduct(id).getCategory());
+        showProductCategory(category);
     }
 
     /********************************/
