@@ -6,6 +6,10 @@ public class Accessories extends Product{
     super(name, price, nbItems);
   }
 
+  public Accessories(int id, String name, double price, int nbItems) {
+    super(id, name, price, nbItems);
+  }
+
   @Override
   public String toString() {
     return "Accessories{"+ super.toString()+"}";

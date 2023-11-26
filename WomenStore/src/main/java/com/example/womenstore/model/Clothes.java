@@ -9,6 +9,11 @@ public class Clothes extends Product{
     setSize(size);
   }
 
+  public Clothes(int id, String name, double price, int nbItems, int size) {
+    super(id, name, price, nbItems);
+    setSize(size);
+  }
+
   public int getSize() {
     return size;
   }
