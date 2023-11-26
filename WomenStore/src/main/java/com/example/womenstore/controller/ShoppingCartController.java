@@ -51,7 +51,13 @@ public class ShoppingCartController {
                 double price = Double.parseDouble(productDetails.get("Price"));
                 int quantity = Integer.parseInt(productDetails.get("Quantity"));
                 String type = productDetails.get("Type");
-                int size = Integer.parseInt(productDetails.get("Size"));
+                int size;
+                if(productDetails.get("Size")==null){
+                    size=0;
+                }
+                else{
+                    size = Integer.parseInt(productDetails.get("Size"));
+                }
 
                 model.addToProducts(type,name,price,quantity,size);
                 showProductCategory(type);

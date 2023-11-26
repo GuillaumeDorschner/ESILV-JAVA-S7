@@ -245,5 +245,4 @@ public class ShoppingCartModel {
         }
         products = newProduct;
     }
-
 }
