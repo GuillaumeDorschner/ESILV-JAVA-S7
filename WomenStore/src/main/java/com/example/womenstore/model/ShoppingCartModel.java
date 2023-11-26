@@ -226,13 +226,13 @@ public class ShoppingCartModel {
                 Product product = null;
                 switch (type) {
                     case "Accessories":
-                        product = new Accessories(name, price, quantity);
+                        product = new Accessories(id, name, price, quantity);
                         break;
                     case "Clothes":
-                        product = new Clothes(name, price, quantity, size);
+                        product = new Clothes(id, name, price, quantity, size);
                         break;
                     case "Shoes":
-                        product = new Shoes(name, price, quantity, size);
+                        product = new Shoes(id, name, price, quantity, size);
                         break;
                     default:
 

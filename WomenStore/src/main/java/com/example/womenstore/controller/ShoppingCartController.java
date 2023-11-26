@@ -54,7 +54,7 @@ public class ShoppingCartController {
                 int size = Integer.parseInt(productDetails.get("Size"));
 
                 model.addToProducts(type,name,price,quantity,size);
-
+                showProductCategory(type);
             } else {
                 // Display a message indicating that the user canceled the input
                 view.showAlert("Canceled", "Product addition canceled.", Alert.AlertType.WARNING);
@@ -71,7 +71,7 @@ public class ShoppingCartController {
     public void deleteProduct() {
         int id = view.askForProductID(this);
         model.removeProduct(checkIdProduct(id));
-
+        showProductCategory(checkIdProduct(id).getCategory());
     }
 
     /********************************/
@@ -85,6 +85,7 @@ public class ShoppingCartController {
             double price = Double.parseDouble(productNewDetails.get("Price"));
             int quantity = Integer.parseInt(productNewDetails.get("Quantity"));
             model.modifyProduct(id,price,quantity);
+            showProductCategory(checkIdProduct(id).getCategory());
         }
     }
 }
