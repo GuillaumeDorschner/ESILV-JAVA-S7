@@ -4,11 +4,14 @@ import com.example.womenstore.model.*;
 import com.example.womenstore.view.ShoppingCartView;
 import java.util.ArrayList;
 import java.util.List;
+
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Alert;
 import java.util.Map;
 
 
-public class ShoppingCartController {
+public class ShoppingCartController{
     private final ShoppingCartModel model;
     private final ShoppingCartView view;
 
@@ -23,13 +26,13 @@ public class ShoppingCartController {
     }
 
     public void showProductCategory( String category ) {
-        List<String> productDetails = new ArrayList<>();
+        List<Product> productDetails = new ArrayList<>();
         for (Product product : model.getProducts()) {
             if (product.getCategory().equals(category)) {
-                productDetails.add(product.toString());
+                productDetails.add(product);
             }
         }
-        view.updateProductListView(productDetails);
+        view.updateProductListView(productDetails, this);
     }
 
     /********************************/
@@ -51,9 +54,16 @@ public class ShoppingCartController {
                 double price = Double.parseDouble(productDetails.get("Price"));
                 int quantity = Integer.parseInt(productDetails.get("Quantity"));
                 String type = productDetails.get("Type");
-                int size = Integer.parseInt(productDetails.get("Size"));
+                int size;
+                if(productDetails.get("Size")==null){
+                    size=0;
+                }
+                else{
+                    size = Integer.parseInt(productDetails.get("Size"));
+                }
 
                 model.addToProducts(type,name,price,quantity,size);
+                showProductCategory(type);
 
             } else {
                 // Display a message indicating that the user canceled the input
@@ -68,9 +78,13 @@ public class ShoppingCartController {
         return model.checkID(id);
     }
 
+    /********************************/
+
     public void deleteProduct() {
         int id = view.askForProductID(this);
         model.removeProduct(checkIdProduct(id));
+        showProductCategory(checkIdProduct(id).getCategory());
+        view.showAlert("Success", "Product deleted successfully!", Alert.AlertType.INFORMATION);
 
     }
 
@@ -85,12 +99,24 @@ public class ShoppingCartController {
             double price = Double.parseDouble(productNewDetails.get("Price"));
             int quantity = Integer.parseInt(productNewDetails.get("Quantity"));
             model.modifyProduct(id,price,quantity);
+            showProductCategory(checkIdProduct(id).getCategory());
+            view.showAlert("Success", "Product modification successfully!", Alert.AlertType.INFORMATION);
         }
+        else{
+            view.showAlert("Canceled", "Product modification canceled.", Alert.AlertType.WARNING);
+        }
+    }
 
+    /***************DISCOUNT APPLICATION*****************/
 
+    public void applyDiscount(Product p) {
+        model.applyDiscount(p);
+    }
 
+    public void stopDiscount(Product p){
+        model.stopDiscount(p);
     }
 
 
-
+    /********************************/
 }

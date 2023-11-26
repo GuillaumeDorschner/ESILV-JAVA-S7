@@ -5,6 +5,9 @@ public interface Discount {
   double DISCOUNT_SHOES=0.2;
   double DISCOUNT_ACCESSORIES= 0.5;
 
-  public void applyDiscount();
+  void applyDiscount();
+
+  void stopDiscount();
 
 }
+

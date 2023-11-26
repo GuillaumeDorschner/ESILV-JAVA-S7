@@ -3,10 +3,12 @@ package com.example.womenstore.model;
 public class Shoes extends Product {
 
   private int shoeSize;
+  private double originalPrice;
 
   public Shoes(String name, double price, int nbItems, int shoeSize) {
     super(name, price, nbItems);
     this.shoeSize = shoeSize;
+    originalPrice=price;
   }
 
   public int getShoeSize() {
@@ -31,7 +33,14 @@ public class Shoes extends Product {
 
   @Override
   public void applyDiscount() {
-    this.setPrice(this.getPrice()*(1-DISCOUNT_SHOES));
+    originalPrice = getPrice();
+    setPrice(getPrice()*(1-DISCOUNT_SHOES));
+  }
+
+  @Override
+  public void stopDiscount() {
+    setPrice(originalPrice);
 
   }
+
 }

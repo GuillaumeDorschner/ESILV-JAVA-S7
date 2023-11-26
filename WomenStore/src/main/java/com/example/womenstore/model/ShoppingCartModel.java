@@ -1,12 +1,14 @@
 package com.example.womenstore.model;
 
+import javafx.beans.property.DoubleProperty;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class ShoppingCartModel {
 
     private List<Product> products; //list of ALL items
-    private List<Product> basket; //list of your shopping
+    private List<Product> basket; //list of the shopping
 
     public ShoppingCartModel() {
         products = new ArrayList<>();
@@ -29,8 +31,16 @@ public class ShoppingCartModel {
         return basket;
     }
 
-    public void readDB(String f){
+    public double calculateTotalPrice() {
+        double totalPrice = 0;
+        for (Product product : basket) {
+            totalPrice += product.getPrice();
+        }
+        return totalPrice;
+    }
 
+    public void addToBasket(Product product) {
+        basket.add(product);
     }
 
     public void addToProducts(String type, String name, double price, int quantity, int size){
@@ -48,18 +58,6 @@ public class ShoppingCartModel {
             this.products.add(accessories);
         }
 
-    }
-
-    public void addToBasket(Product product) {
-        basket.add(product);
-    }
-
-    public double calculateTotalPrice() {
-        double totalPrice = 0;
-        for (Product product : basket) {
-            totalPrice += product.getPrice();
-        }
-        return totalPrice;
     }
 
     public Product checkID(int id){
@@ -88,5 +86,15 @@ public class ShoppingCartModel {
             }
         }
     }
+
+    public void applyDiscount(Product p){
+        p.applyDiscount();
+    }
+
+    public  void stopDiscount(Product p){
+        p.stopDiscount();
+    }
+
+
 
 }
