@@ -24,6 +24,7 @@ public class ShoppingCartModel {
 
     private List<Product> products; //list of ALL items
     private List<Product> basket; //list of your shopping
+    private List<Transaction> transactions; //list of all transactions
 
     public ShoppingCartModel() {
         products = new ArrayList<>();
@@ -70,14 +71,7 @@ public class ShoppingCartModel {
 
     
     public void sellShoppingCart(){
-        for(Product p : basket){
-            for(Product p2 : products){
-                if(p.getId() == p2.getId()){
-                    p2.setNbItems(p2.getNbItems()-p.getNbItems());
-                }
-            }
-        }
-        basket.clear();
+        sellFromDatabase();
     }
 
     public void addToProducts(String type, String name, double price, int quantity, int size){
@@ -252,4 +246,79 @@ public class ShoppingCartModel {
         }
         products = newProduct;
     }
+
+    
+    public void sellFromDatabase() {
+        double totalSaleAmount = calculateTotalPrice();
+        if (totalSaleAmount == 0) return;
+
+        // Create a transaction record
+        String transactionSql = "INSERT INTO Transaction (total) VALUES (?)";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(transactionSql, Statement.RETURN_GENERATED_KEYS)) {
+
+            preparedStatement.setDouble(1, totalSaleAmount);
+            int affectedRows = preparedStatement.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new SQLException("Creating transaction failed, no rows affected.");
+            }
+
+            try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
+                    int transactionId = generatedKeys.getInt(1);
+                    updateProductsInDatabase();
+                    basket.clear();
+                } else {
+                    throw new SQLException("Creating transaction failed, no ID obtained.");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        fecthTransactionsFromDatabase();
+    }
+
+    private void updateProductsInDatabase() {
+        for(Product p : basket){
+            String updateProductSql = "UPDATE Product SET nbItems = nbItems - ? WHERE id = ?";
+
+            try (Connection connection = DatabaseConnection.getConnection();
+                 PreparedStatement preparedStatement = connection.prepareStatement(updateProductSql)) {
+
+                preparedStatement.setInt(1, p.getNbItems());
+                preparedStatement.setInt(2, p.getId());
+                preparedStatement.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    public void fecthTransactionsFromDatabase() {
+        List<Transaction> newTransactions = new ArrayList<>();
+        String sql = "SELECT * FROM Transaction";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(sql)) {
+
+            transactions.clear();
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                Timestamp time = resultSet.getTimestamp("time");
+                double total = resultSet.getDouble("total");
+
+                Transaction transaction = new Transaction(id, time, total);
+                newTransactions.add(transaction);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        transactions = newTransactions;
+    }
+
+    
 }

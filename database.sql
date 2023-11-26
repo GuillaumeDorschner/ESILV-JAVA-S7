@@ -17,7 +17,7 @@ CREATE TABLE Product (
 
 CREATE TABLE Transaction (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    date DATE,
+    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     total DOUBLE
 );
 
@@ -35,3 +35,6 @@ INSERT INTO Product (name, price, nbItems, type, size) VALUES ('High Heels', 80.
 -- Accessories
 INSERT INTO Product (name, price, nbItems, type) VALUES ('Sunglasses', 25.00, 50, 'Accessories');
 INSERT INTO Product (name, price, nbItems, type) VALUES ('Handbag', 45.00, 30, 'Accessories');
+
+-- transaction
+INSERT INTO Transaction (total) VALUES (100.00);
