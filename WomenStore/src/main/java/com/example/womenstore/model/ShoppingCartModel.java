@@ -122,7 +122,7 @@ public class ShoppingCartModel {
         System.out.println("Adding product to DB");
         System.out.println(p);
 
-        String sql = "INSERT INTO Product (name, price, nbItems, category, size) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Product (name, price, nbItems, type, size) VALUES (?, ?, ?, ?, ?)";
         try (Connection connection = DatabaseConnection.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(sql)) {
 
@@ -143,7 +143,7 @@ public class ShoppingCartModel {
             }
 
             pstmt.executeUpdate();
-            // fetchProductsFromDatabase();
+            fetchProductsFromDatabase();
             
         } catch (SQLException e) {
             e.printStackTrace();
@@ -156,7 +156,7 @@ public class ShoppingCartModel {
         System.out.println("Modifying product to DB");
         System.out.println(p);
 
-        String sql = "UPDATE Product SET name = ?, price = ?, nbItems = ?, category = ?, size = ? WHERE id = ?";
+        String sql = "UPDATE Product SET name = ?, price = ?, nbItems = ?, type = ?, size = ? WHERE id = ?";
         try (Connection connection = DatabaseConnection.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(sql)) {
 
@@ -176,9 +176,9 @@ public class ShoppingCartModel {
                     pstmt.setNull(5, java.sql.Types.INTEGER);
             }
 
-            pstmt.setInt(6, p.getId()); // Setting the ID for WHERE clause
+            pstmt.setInt(6, p.getId());
             pstmt.executeUpdate();
-            // fetchProductsFromDatabase();
+            fetchProductsFromDatabase();
             
         } catch (SQLException e) {
             e.printStackTrace();
@@ -195,9 +195,9 @@ public class ShoppingCartModel {
         try (Connection connection = DatabaseConnection.getConnection();
             PreparedStatement pstmt = connection.prepareStatement(sql)) {
 
-            pstmt.setInt(1, p.getId()); // Setting the ID for WHERE clause
+            pstmt.setInt(1, p.getId());
             pstmt.executeUpdate();
-            // fetchProductsFromDatabase();
+            fetchProductsFromDatabase();
             
         } catch (SQLException e) {
             e.printStackTrace();
@@ -206,11 +206,14 @@ public class ShoppingCartModel {
 
 
     public void fetchProductsFromDatabase() {
+        List<Product> newProduct = new ArrayList<>();
         String sql = "SELECT * FROM Product";
 
         try (Connection connection = DatabaseConnection.getConnection();
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(sql)) {
+
+            products.clear();
 
             while (resultSet.next()) {
                 int id = resultSet.getInt("id");
@@ -234,12 +237,13 @@ public class ShoppingCartModel {
                     default:
 
                 }
-                products.add(product);
 
+                newProduct.add(product);
             }
             } catch (SQLException e) {
             e.printStackTrace();
         }
+        products = newProduct;
     }
 
 }

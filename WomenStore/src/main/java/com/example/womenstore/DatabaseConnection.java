@@ -12,7 +12,6 @@ public class DatabaseConnection {
     private DatabaseConnection() {}
 
     public static Connection getConnection() {
-        if (connection == null) {
             try {
                 Dotenv dotenv = Dotenv.load();
                 String url = dotenv.get("DB_URL");
@@ -22,7 +21,6 @@ public class DatabaseConnection {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-        }
         return connection;
     }
 }
