@@ -3,10 +3,12 @@ package com.example.womenstore.model;
 public class Clothes extends Product{
 
   private int size;
+  private double originalPrice=0;
 
   public Clothes(String name, double price, int nbItems, int size) {
     super(name, price, nbItems);
     setSize(size);
+    originalPrice=price;
   }
 
   public Clothes(int id, String name, double price, int nbItems, int size) {
@@ -38,7 +40,22 @@ public class Clothes extends Product{
 
   @Override
   public void applyDiscount() {
-    this.setPrice(this.getPrice()*(1-DISCOUNT_CLOTHES));
+    originalPrice = getPrice();
+    setPrice(getPrice()*(1-DISCOUNT_CLOTHES));
+  }
+
+  @Override
+  public void stopDiscount() {
+
+    setPrice(originalPrice);
+    originalPrice=0;
+  }
+
+  public boolean isDiscountApplied(){
+    if(originalPrice!=0){
+      return true;
+    }
+    return false;
   }
 
 

@@ -7,8 +7,8 @@ import com.example.womenstore.DatabaseConnection;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
-
-
+import java.util.ArrayList;
+import java.util.List;
 
 public class ShopApplication extends Application {
     @Override
@@ -17,6 +17,7 @@ public class ShopApplication extends Application {
         ShoppingCartModel model = new ShoppingCartModel();
         ShoppingCartView view = new ShoppingCartView(primaryStage);
         ShoppingCartController controller = new ShoppingCartController(model, view);
+
     }
 
 

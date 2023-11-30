@@ -2,6 +2,8 @@ package com.example.womenstore.model;
 
 public class Accessories extends Product{
 
+  private double originalPrice=0;
+
   public Accessories(String name, double price, int nbItems) {
     super(name, price, nbItems);
   }
@@ -22,7 +24,22 @@ public class Accessories extends Product{
 
   @Override
   public void applyDiscount() {
-    this.setPrice(this.getPrice()*(1-DISCOUNT_ACCESSORIES));
-
+    originalPrice = getPrice();
+    System.out.println(originalPrice);
+    setPrice(getPrice() * (1 - DISCOUNT_ACCESSORIES));
   }
+
+  @Override
+  public void stopDiscount() {
+    setPrice(originalPrice);
+    originalPrice=0;
+  }
+
+  public boolean isDiscountApplied(){
+    if(originalPrice!=0){
+      return true;
+    }
+    return false;
+  }
+
 }

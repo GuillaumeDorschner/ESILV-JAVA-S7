@@ -1,4 +1,8 @@
 package com.example.womenstore.model;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import com.example.womenstore.DatabaseConnection;
 
@@ -24,13 +28,14 @@ import java.util.List;
 
 public class ShoppingCartModel {
 
-    private List<Product> products; //list of ALL items
-    private List<Product> basket; //list of your shopping
-    private List<Transactions> transactions; //list of all transactions
+    private ObservableList<Product> products; // list of ALL items
+    private ObservableList<Product> basket; // list of the shopping
+    private final DoubleProperty totalIncomeProperty = new SimpleDoubleProperty();
+    private final DoubleProperty totalOutcomeProperty = new SimpleDoubleProperty();
 
     public ShoppingCartModel() {
-        products = new ArrayList<>();
-        basket = new ArrayList<>();
+        products = FXCollections.observableArrayList();
+        basket = FXCollections.observableArrayList();
         initializeProducts();
     }
 
@@ -38,16 +43,20 @@ public class ShoppingCartModel {
         fetchProductsFromDatabase();
     }
 
-    public List<Product> getProducts() {
+    public ObservableList<Product> getProducts() {
         return products;
     }
 
-    public List<Product> getBasket() {
+    public ObservableList<Product> getBasket() {
         return basket;
     }
 
-    public void readDB(String f){
+    public double getTotalIncome() {
+        return totalIncomeProperty.get();
+    }
 
+    public DoubleProperty totalIncomeProperty() {
+        return totalIncomeProperty;
     }
 
     public double calculateTotalPrice() {
@@ -75,6 +84,22 @@ public class ShoppingCartModel {
     public void sellShoppingCart(){
         sellFromDatabase();
         // reload fonction total incom
+    }
+
+    public double getTotalOutcome() {
+        return totalOutcomeProperty.get();
+    }
+
+    public DoubleProperty totalOutcomeProperty() {
+        return totalOutcomeProperty;
+    }
+
+    public double calculateTotalPrice() {
+        double totalPrice = 0;
+        for (Product product : basket) {
+            totalPrice += product.getPrice();
+        }
+        return totalPrice;
     }
 
     public void addToProducts(String type, String name, double price, int quantity, int size){
@@ -323,4 +348,30 @@ public class ShoppingCartModel {
     }
 
     
+    public void applyDiscount(Product p) {
+        p.applyDiscount();
+    }
+
+    public void stopDiscount(Product p) {
+        p.stopDiscount();
+    }
+
+
+    /********Buying and selling =>basket list********/
+
+    public void buying(String type, String name, double price, int quantity, int size){
+        if(type.equals("Shoes")){
+            Product shoes = new Shoes(name,price,quantity,size);
+            this.basket.add(shoes);
+        }
+        else if(type.equals("Clothes")){
+            Product clothes = new Clothes(name,price,quantity,size);
+            this.basket.add(clothes);
+        }
+        else{
+            Product accessories = new Accessories(name,price,quantity);
+            this.basket.add(accessories);
+        }
+
+    }
 }

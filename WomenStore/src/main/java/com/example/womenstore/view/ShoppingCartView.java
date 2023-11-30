@@ -1,6 +1,9 @@
 package com.example.womenstore.view;
 
 import com.example.womenstore.controller.*;
+import com.example.womenstore.model.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -12,6 +15,7 @@ import javafx.stage.Stage;
 
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class ShoppingCartView {
@@ -19,14 +23,13 @@ public class ShoppingCartView {
     private final TextInputDialog textInputDialog = new TextInputDialog();
     private final ChoiceDialog<String> choiceDialog = new ChoiceDialog<>();
     private Stage stage;
-    private ListView<String> productListView;
-    private VBox basketView;
-    private Label totalPriceLabel;
+    private ListView<HBox> productListView;
+    private ListView<HBox> basketListView;
 
     public ShoppingCartView(Stage stage) {
         this.stage = stage;
         productListView = new ListView<>();
-        totalPriceLabel = new Label("Total Price: $0.0");
+        basketListView = new ListView<>();
 
         textInputDialog.setHeaderText(null);
         choiceDialog.setHeaderText(null);
@@ -43,18 +46,15 @@ public class ShoppingCartView {
         // Create a VBox to stack the action buttons above the product list
         VBox centerLayout = new VBox();
         centerLayout.setAlignment(Pos.TOP_CENTER);
-        centerLayout.setSpacing(10);
-
-        // Add the action buttons
-        centerLayout.getChildren().add(createProductActionButtons(controller));
-
-        // Add the product list (you may replace this with your actual product list view)
-        centerLayout.getChildren().add(createProductListView());
+        centerLayout.getChildren().addAll(createProductActionButtons(controller), createProductListView());
 
         mainLayout.setCenter(centerLayout);
-        mainLayout.setRight(createBasketView(controller));
 
-        Scene scene = new Scene(mainLayout, 800, 600);
+        VBox rightLayout = new VBox();
+        rightLayout.getChildren().addAll(createBasketView(controller), createBasketListView(), buttonConfirm(controller));
+        mainLayout.setRight(rightLayout);
+
+        Scene scene = new Scene(mainLayout, 900, 500);
         stage.setScene(scene);
         stage.show();
     }
@@ -72,7 +72,8 @@ public class ShoppingCartView {
 
         return menuBar;
     }
-    /**************Buttons for different product categories****************/
+
+    /**************Buttons for product categories****************/
 
     private VBox createProductCategoryButtons(ShoppingCartController controller) {
         VBox productNavigation = new VBox();
@@ -81,20 +82,82 @@ public class ShoppingCartView {
         Button shoesButton = createProductCategoryButton("Shoes", controller);
         Button accessoriesButton = createProductCategoryButton("Accessories", controller);
 
+        // Add buttons to the VBox
         productNavigation.getChildren().addAll(clothesButton, shoesButton, accessoriesButton);
+
+
 
         return productNavigation;
     }
 
+
     private Button createProductCategoryButton(String category, ShoppingCartController controller) {
         Button button = new Button(category);
         button.setMinWidth(120); // Set a fixed width for all buttons
-        VBox.setMargin(button, new Insets(10, 10, 0, 10)); // Add left and right margin
+        VBox.setMargin(button, new Insets(50, 10, 0, 10)); // Add left and right margin
 
         // Set action for the button
         button.setOnAction(event -> controller.showProductCategory(category));
 
         return button;
+    }
+
+    public void updateProductListView(List<Product> productDetails, ShoppingCartController controller) {
+        ObservableList<HBox> productListWithDiscountButtons = FXCollections.observableArrayList();
+
+        for (Product productDetail : productDetails) {
+            HBox productWithDiscountButton = new HBox();
+
+            // Create labels for each attribute
+            Label idLabel = new Label("ID: " + productDetail.getId() + " | ");
+            Label nameLabel = new Label("Name: " + productDetail.getName() + " | ");
+            Label sizeLabel=new Label();
+
+            if(productDetail instanceof Shoes){
+                Shoes shoes = (Shoes)productDetail;
+                sizeLabel = new Label("Size: " + shoes.getSize() + " | ");
+            }
+            if(productDetail instanceof Clothes){
+                Clothes clothes = (Clothes)productDetail;
+                sizeLabel = new Label("Size: " + clothes.getSize() + " | ");
+            }
+
+            Label priceLabel = new Label("Price: ");
+            Label nbItemsLabel = new Label(" | Available Items: " + productDetail.getNbItems() + " | ");
+
+            // Bind the price label to the product's priceProperty
+            Label priceValueLabel = new Label();
+            priceValueLabel.textProperty().bind(productDetail.priceProperty().asString("%.2f"));
+
+            ToggleButton discountToggleButton = new ToggleButton("Apply Discount");
+
+            // Add action event for the ToggleButton
+            discountToggleButton.setOnAction(event -> {
+                boolean applyDiscount = discountToggleButton.isSelected();
+                if (applyDiscount) {
+                    controller.applyDiscount(productDetail);
+                } else {
+                    controller.stopDiscount(productDetail);
+                }
+            });
+
+            if (productDetails instanceof Accessories) {
+                productWithDiscountButton.getChildren().addAll(idLabel, nameLabel, priceLabel, priceValueLabel, nbItemsLabel, discountToggleButton);
+            }
+            else {
+                productWithDiscountButton.getChildren().addAll(idLabel, nameLabel, sizeLabel, priceLabel, priceValueLabel, nbItemsLabel, discountToggleButton);
+            }
+
+
+            productListWithDiscountButtons.add(productWithDiscountButton);
+        }
+
+        productListView.getItems().setAll(productListWithDiscountButtons);
+    }
+
+    private ListView<HBox> createProductListView() {
+        productListView.setPrefWidth(200);
+        return productListView;
     }
 
     /**************Choose your actions****************/
@@ -112,10 +175,10 @@ public class ShoppingCartView {
         return categoryButtons;
     }
 
-
     private Button createProductActionButton(String action, ShoppingCartController controller) {
         Button button = new Button(action);
         button.setMinWidth(100); // Set a fixed size for all buttons
+        HBox.setMargin(button, new Insets(10, 0, 10, 0));
 
         // Set action for the button based on the action type
         switch (action) {
@@ -171,13 +234,16 @@ public class ShoppingCartView {
                 // Handle invalid input, show a message, and ask the user to correct it
                 return null;
             }
-            details.put("Size", String.valueOf(Integer.parseInt(sizeResult.get())));
+            if("Clothes".equals(productType) && (Integer.parseInt(sizeResult.get()) < 36 || Integer.parseInt(sizeResult.get()) > 50)){
+                showAlert("Canceled", "Size is under 36 or above 50.", Alert.AlertType.WARNING);
+                return null;
+            }
+            details.put("Size", String.valueOf(Integer.parseInt(sizeResult.get()) ) );
         }
 
         textInputDialog.setContentText("Enter " + productType + " Price:");
         Optional<String> priceResult = textInputDialog.showAndWait();
         if (priceResult.isEmpty() || !isValidNumericInput(priceResult.get())) {
-            // Handle invalid input, show a message, and ask the user to correct it
             return null;
         }
         details.put("Price", String.valueOf(Double.parseDouble(priceResult.get())));
@@ -267,25 +333,148 @@ public class ShoppingCartView {
         alert.showAndWait();
     }
 
+
     /*************Buying/selling*****************/
-    private ListView<String> createProductListView() {
-        productListView.setPrefWidth(200);
-        return productListView;
-    }
 
     private VBox createBasketView(ShoppingCartController controller) {
-       VBox basketView = new VBox(new Label("Basket"), new Button("Checkout")); // Example button for checkout
-        basketView.setSpacing(10);
+        // Labels to display total income and total outcome
+        Label totalIncomeLabel = new Label();
+        Label totalOutcomeLabel = new Label();
+
+        totalIncomeLabel.textProperty().bind(controller.getModel().totalIncomeProperty().asString("Total Income: $%.2f"));
+        totalOutcomeLabel.textProperty().bind(controller.getModel().totalOutcomeProperty().asString("Total Outcome: $%.2f"));
+
+        Button buyButton = new Button("Buy Product");
+        Button sellButton = new Button("Sell Product");
+
+        HBox labelHBox = new HBox(20);
+        labelHBox.getChildren().addAll(totalOutcomeLabel, totalIncomeLabel);
+
+        HBox buttonsHBox = new HBox(30);
+        buttonsHBox.getChildren().addAll(buyButton, sellButton);
+
+        buyButton.setMinWidth(100); // Set a fixed size for all buttons
+        sellButton.setMinWidth(100); // Set a fixed size for all buttons
+
+        buyButton.setOnAction(event -> controller.buyProduct());
+        //sellButton.setOnAction(event -> handleSellButtonClick(controller));
+
+        ListView<String> listView = new ListView<>();
+
+        // Set margins for the HBoxes
+        Insets labelMargins = new Insets(20, 10, 10, 10);
+        Insets buttonsMargins = new Insets(0, 10, 10, 10);
+
+        VBox.setMargin(labelHBox, labelMargins);
+        VBox.setMargin(buttonsHBox, buttonsMargins);
+
+        // Ajouter le titre "Transactions"
+        Label titleLabel = new Label("Transactions");
+        titleLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        VBox.setMargin(titleLabel, new Insets(10, 0, 0, 0)); // Marge en bas du titre
+
+        VBox basketView = new VBox();
+
+        basketView.setAlignment(Pos.CENTER);
+        basketView.getChildren().addAll(titleLabel,labelHBox, buttonsHBox);
 
         return basketView;
     }
 
-    public void updateProductListView(List<String> productDetails) {
-        productListView.getItems().setAll(productDetails);
+    public void updateListTransaction(List<Product> listTransactions, ShoppingCartController controller) {
+        ObservableList<HBox> transactionListWithButtons = FXCollections.observableArrayList();
+
+        for (Product transaction : listTransactions) {
+            HBox transactionWithButton = new HBox();
+
+            Label nameLabel = new Label("Name: " + transaction.getName() + " | ");
+            Label sizeLabel = new Label();
+            if (transaction instanceof Shoes) {
+                Shoes shoes = (Shoes) transaction;
+                sizeLabel = new Label("Size: " + shoes.getSize() + " | ");
+            } else if (transaction instanceof Clothes) {
+                Clothes clothes = (Clothes) transaction;
+                sizeLabel = new Label("Size: " + clothes.getSize() + " | ");
+            }
+
+            Label priceLabel = new Label("Price: " + transaction.getPrice() +" | ");
+            Label quantityLabel = new Label("Quantity: " + transaction.getNbItems() + " | ");
+
+            transactionWithButton.getChildren().addAll(nameLabel, sizeLabel, priceLabel, quantityLabel);
+            transactionListWithButtons.add(transactionWithButton);
+        }
+        basketListView.getItems().setAll(transactionListWithButtons);
     }
 
-    public void updateTotalPriceLabel(double totalPrice) {
-        totalPriceLabel.setText("Total Price: $" + totalPrice);
+    private ListView<HBox> createBasketListView(){
+        VBox.setMargin(basketListView, new Insets(0, 10, 0, 10));
+        basketListView.setPrefWidth(200);
+        return basketListView;
     }
+
+    private VBox buttonConfirm(ShoppingCartController controller) {
+
+        VBox confirmButtonBox = new VBox();
+        VBox.setMargin(confirmButtonBox, new Insets(10,10,10,10));
+        Button confirmButton = new Button("Confirm transaction");
+        confirmButton.setOnAction(event -> {
+            // Handle confirming all transactions
+        });
+        confirmButtonBox.setAlignment(Pos.CENTER);
+        confirmButtonBox.getChildren().addAll(confirmButton);
+        return confirmButtonBox;
+    }
+
+
+    /****************************/
+    public Map<String, String> handleBuyButtonClick(String productType) {
+        Map<String, String> details = new HashMap<>();
+
+        details.put("Type", productType);
+
+        textInputDialog.setTitle("Enter " + productType + " Details");
+
+        textInputDialog.setContentText("Enter " + productType + " Name:");
+        Optional<String> nameResult = textInputDialog.showAndWait();
+        if (nameResult.isEmpty()) {
+            return null;
+        }
+        details.put("Name", nameResult.get());
+
+
+        // Additional details for Shoes and Clothes
+        if ("Shoes".equals(productType) || "Clothes".equals(productType)) {
+            textInputDialog.setContentText("Enter " + productType + " Size:");
+            Optional<String> sizeResult = textInputDialog.showAndWait();
+            if (sizeResult.isEmpty() || !isValidNumericInput(sizeResult.get())) {
+                // Handle invalid input, show a message, and ask the user to correct it
+                return null;
+            }
+            if("Clothes".equals(productType) && (Integer.parseInt(sizeResult.get()) < 36 || Integer.parseInt(sizeResult.get()) > 50)){
+                showAlert("Canceled", "Size is under 36 or above 50.", Alert.AlertType.WARNING);
+                return null;
+            }
+            details.put("Size", String.valueOf(Integer.parseInt(sizeResult.get()) ) );
+        }
+
+        textInputDialog.setContentText("Enter " + productType + " Price:");
+        Optional<String> priceResult = textInputDialog.showAndWait();
+        if (priceResult.isEmpty() || !isValidNumericInput(priceResult.get())) {
+            return null;
+        }
+        details.put("Price", String.valueOf(Double.parseDouble(priceResult.get())));
+
+        textInputDialog.setContentText("Enter " + productType + " Quantity:");
+        Optional<String> quantityResult = textInputDialog.showAndWait();
+        if (quantityResult.isEmpty() || !isValidNumericInput(quantityResult.get())) {
+            // Handle invalid input, show a message, and ask the user to correct it
+            return null;
+        }
+        details.put("Quantity", String.valueOf(Integer.parseInt(quantityResult.get())));
+
+        return details;
+    }
+
+
 
 }
