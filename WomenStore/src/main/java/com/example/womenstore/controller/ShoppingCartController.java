@@ -21,6 +21,15 @@ public class ShoppingCartController{
         initController();
     }
 
+
+    public ShoppingCartModel getModel(){
+        return model;
+    }
+
+    public ShoppingCartView getView(){
+        return view;
+    }
+
     private void initController() {
         view.show(this);
     }
@@ -117,6 +126,42 @@ public class ShoppingCartController{
         model.stopDiscount(p);
     }
 
-
     /********************************/
+
+    public void showProductTransaction() {
+        view.updateListTransaction(model.getBasket(),this);
+    }
+
+    public void buyProduct(){
+        String productType = view.askForProductType();
+
+        if (productType != null) {
+            Map<String, String> productDetails = view.handleBuyButtonClick(productType);
+
+            if (productDetails != null) {
+
+                System.out.println("Product details: " + productDetails);
+                view.showAlert("Success", "Product Transaction successfully!", Alert.AlertType.INFORMATION);
+
+                String name = productDetails.get("Name");
+                double price = Double.parseDouble(productDetails.get("Price"));
+                int quantity = Integer.parseInt(productDetails.get("Quantity"));
+                String type = productDetails.get("Type");
+                int size;
+                if(productDetails.get("Size")==null){
+                    size=0;
+                }
+                else{
+                    size = Integer.parseInt(productDetails.get("Size"));
+                }
+
+                model.buying(type,name,price,quantity,size);
+                showProductTransaction();
+
+            } else {
+                view.showAlert("Canceled", "Product Transaction canceled.", Alert.AlertType.WARNING);
+            }
+        }
+
+    }
 }

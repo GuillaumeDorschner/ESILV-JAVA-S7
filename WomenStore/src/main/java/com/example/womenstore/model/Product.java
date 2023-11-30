@@ -100,6 +100,8 @@ public abstract class Product implements Discount, Comparable<Product> {
 
   public abstract String getCategory();
 
+  public abstract boolean isDiscountApplied();
+
   @Override
   public int compareTo(Product o) {
     return Double.compare(this.getPrice(), o.getPrice());

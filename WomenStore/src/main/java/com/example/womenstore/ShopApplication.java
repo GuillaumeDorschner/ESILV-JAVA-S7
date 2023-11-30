@@ -4,8 +4,6 @@ import com.example.womenstore.model.ShoppingCartModel;
 import com.example.womenstore.view.ShoppingCartView;
 import com.example.womenstore.controller.ShoppingCartController;
 import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.util.ArrayList;
