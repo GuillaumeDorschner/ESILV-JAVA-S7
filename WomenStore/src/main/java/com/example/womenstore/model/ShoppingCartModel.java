@@ -8,6 +8,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Timestamp;
+import com.example.womenstore.model.*;
 
 
 import com.example.womenstore.DatabaseConnection;
@@ -24,7 +26,7 @@ public class ShoppingCartModel {
 
     private List<Product> products; //list of ALL items
     private List<Product> basket; //list of your shopping
-    private List<Transaction> transactions; //list of all transactions
+    private List<Transactions> transactions; //list of all transactions
 
     public ShoppingCartModel() {
         products = new ArrayList<>();
@@ -72,6 +74,7 @@ public class ShoppingCartModel {
     
     public void sellShoppingCart(){
         sellFromDatabase();
+        // reload fonction total incom
     }
 
     public void addToProducts(String type, String name, double price, int quantity, int size){
@@ -252,7 +255,6 @@ public class ShoppingCartModel {
         double totalSaleAmount = calculateTotalPrice();
         if (totalSaleAmount == 0) return;
 
-        // Create a transaction record
         String transactionSql = "INSERT INTO Transaction (total) VALUES (?)";
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(transactionSql, Statement.RETURN_GENERATED_KEYS)) {
@@ -297,7 +299,7 @@ public class ShoppingCartModel {
 
 
     public void fecthTransactionsFromDatabase() {
-        List<Transaction> newTransactions = new ArrayList<>();
+        List<Transactions> newTransactions = new ArrayList<>();
         String sql = "SELECT * FROM Transaction";
 
         try (Connection connection = DatabaseConnection.getConnection();
@@ -311,7 +313,7 @@ public class ShoppingCartModel {
                 Timestamp time = resultSet.getTimestamp("time");
                 double total = resultSet.getDouble("total");
 
-                Transaction transaction = new Transaction(id, time, total);
+                Transactions transaction = new Transactions(id, time, total);
                 newTransactions.add(transaction);
             }
         } catch (SQLException e) {
