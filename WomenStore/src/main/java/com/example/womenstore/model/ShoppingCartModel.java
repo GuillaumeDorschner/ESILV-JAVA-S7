@@ -28,14 +28,16 @@ import java.util.List;
 
 public class ShoppingCartModel {
 
-    private ObservableList<Product> products; // list of ALL items
-    private ObservableList<Product> basket; // list of the shopping
+    private ObservableList<Product> products;
+    private ObservableList<Product> basket;
+    private ObservableList<Transactions> transactions;
     private final DoubleProperty totalIncomeProperty = new SimpleDoubleProperty();
     private final DoubleProperty totalOutcomeProperty = new SimpleDoubleProperty();
 
     public ShoppingCartModel() {
         products = FXCollections.observableArrayList();
         basket = FXCollections.observableArrayList();
+        transactions = FXCollections.observableArrayList();
         initializeProducts();
     }
 
@@ -92,14 +94,6 @@ public class ShoppingCartModel {
 
     public DoubleProperty totalOutcomeProperty() {
         return totalOutcomeProperty;
-    }
-
-    public double calculateTotalPrice() {
-        double totalPrice = 0;
-        for (Product product : basket) {
-            totalPrice += product.getPrice();
-        }
-        return totalPrice;
     }
 
     public void addToProducts(String type, String name, double price, int quantity, int size){
@@ -165,7 +159,7 @@ public class ShoppingCartModel {
                     pstmt.setInt(5, ((Clothes) p).getSize());
                     break;
                 case "Shoes":
-                    pstmt.setInt(5, ((Shoes) p).getShoeSize());
+                    pstmt.setInt(5, ((Shoes) p).getSize());
                     break;
                 default:
                     pstmt.setNull(5, java.sql.Types.INTEGER);
@@ -199,7 +193,7 @@ public class ShoppingCartModel {
                     pstmt.setInt(5, ((Clothes) p).getSize());
                     break;
                 case "Shoes":
-                    pstmt.setInt(5, ((Shoes) p).getShoeSize());
+                    pstmt.setInt(5, ((Shoes) p).getSize());
                     break;
                 default:
                     pstmt.setNull(5, java.sql.Types.INTEGER);
@@ -235,7 +229,7 @@ public class ShoppingCartModel {
 
 
     public void fetchProductsFromDatabase() {
-        List<Product> newProduct = new ArrayList<>();
+        ObservableList<Product> newProduct = FXCollections.observableArrayList();
         String sql = "SELECT * FROM Product";
 
         try (Connection connection = DatabaseConnection.getConnection();
@@ -324,7 +318,7 @@ public class ShoppingCartModel {
 
 
     public void fecthTransactionsFromDatabase() {
-        List<Transactions> newTransactions = new ArrayList<>();
+        ObservableList<Transactions> newTransactions = FXCollections.observableArrayList();
         String sql = "SELECT * FROM Transaction";
 
         try (Connection connection = DatabaseConnection.getConnection();
