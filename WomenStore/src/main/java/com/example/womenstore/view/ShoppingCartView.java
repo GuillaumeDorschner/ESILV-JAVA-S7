@@ -75,20 +75,17 @@ public class ShoppingCartView {
 
     /**************Buttons for product categories****************/
 
-    private VBox createProductCategoryButtons(ShoppingCartController controller) {
-        VBox productNavigation = new VBox();
+    private ComboBox<String> createProductCategoryButtons(ShoppingCartController controller) {
+        ComboBox<String> productTypeComboBox = new ComboBox<>();
+        productTypeComboBox.getItems().addAll("Clothes", "Shoes", "Accessories");
+        productTypeComboBox.setPromptText("Select Product Type");
 
-        Button clothesButton = createProductCategoryButton("Clothes", controller);
-        Button shoesButton = createProductCategoryButton("Shoes", controller);
-        Button accessoriesButton = createProductCategoryButton("Accessories", controller);
+        // Set action for the ComboBox
+        productTypeComboBox.setOnAction(event -> controller.showProductCategory(productTypeComboBox.getValue()));
 
-        // Add buttons to the VBox
-        productNavigation.getChildren().addAll(clothesButton, shoesButton, accessoriesButton);
-
-
-
-        return productNavigation;
+        return productTypeComboBox;
     }
+
 
 
     private Button createProductCategoryButton(String category, ShoppingCartController controller) {
