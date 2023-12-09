@@ -2,13 +2,16 @@ package com.example.womenstore.view;
 
 import com.example.womenstore.controller.*;
 import com.example.womenstore.model.*;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -211,61 +214,104 @@ public class ShoppingCartView {
     public Map<String, String> askForProductDetails(String productType) {
         Map<String, String> details = new HashMap<>();
 
-        details.put("Type", productType);
+        // Create a custom dialog
+        Dialog<Map<String, String>> buyDialog = new Dialog<>();
+        buyDialog.setTitle("Restock " + productType);
+        buyDialog.setHeaderText("Enter " + productType + " details for purchase:");
 
-        textInputDialog.setTitle("Enter " + productType + " Details");
+        // Set the button types
+        ButtonType buyButtonType = new ButtonType("Add", ButtonBar.ButtonData.OK_DONE);
+        buyDialog.getDialogPane().getButtonTypes().addAll(buyButtonType, ButtonType.CANCEL);
 
-        textInputDialog.setContentText("Enter " + productType + " Name:");
-        Optional<String> nameResult = textInputDialog.showAndWait();
-        if (nameResult.isEmpty()) {
-            return null;
-        }
-        details.put("Name", nameResult.get());
+        // Create the form GridPane
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
 
+        // Add form fields
+        TextField nameField = new TextField();
+        nameField.setPromptText(productType + " Name");
 
-        // Additional details for Shoes and Clothes
+        TextField sizeField = new TextField();
+        sizeField.setPromptText(productType + " Size");
+
+        TextField priceField = new TextField();
+        priceField.setPromptText(productType + " Price");
+
+        TextField quantityField = new TextField();
+        quantityField.setPromptText(productType + " Quantity");
+
+        grid.add(new Label(productType + " Name:"), 0, 0);
+        grid.add(nameField, 1, 0);
+
         if ("Shoes".equals(productType) || "Clothes".equals(productType)) {
-            textInputDialog.setContentText("Enter " + productType + " Size:");
-            Optional<String> sizeResult = textInputDialog.showAndWait();
-            if (sizeResult.isEmpty() || !isValidNumericInput(sizeResult.get())) {
-                // Handle invalid input, show a message, and ask the user to correct it
-                return null;
+            grid.add(new Label(productType + " Size:"), 0, 1);
+            grid.add(sizeField, 1, 1);
+        }
+
+        grid.add(new Label(productType + " Price:"), 0, 2);
+        grid.add(priceField, 1, 2);
+
+        grid.add(new Label(productType + " Quantity:"), 0, 3);
+        grid.add(quantityField, 1, 3);
+
+        // Enable/Disable button depending on whether all fields are filled
+        Node buyButton = buyDialog.getDialogPane().lookupButton(buyButtonType);
+        buyButton.setDisable(true);
+
+        // Do some validation
+        nameField.textProperty().addListener((observable, oldValue, newValue) -> {
+            buyButton.setDisable(newValue.trim().isEmpty());
+        });
+
+        buyDialog.getDialogPane().setContent(grid);
+
+        // Convert the result to a map when the buy button is clicked
+        buyDialog.setResultConverter(dialogButton -> {
+            if (dialogButton == buyButtonType) {
+                details.put("Type", productType);
+                details.put("Name", nameField.getText());
+
+                if ("Shoes".equals(productType) || "Clothes".equals(productType)) {
+                    String sizeInput = sizeField.getText();
+                    if (!isValidNumericInput(sizeInput)) {
+                        showAlert("Invalid Input", "Please enter a valid numeric size.", Alert.AlertType.WARNING);
+                        return null; // Stop processing if size is invalid
+                    }
+
+                    int size = Integer.parseInt(sizeInput);
+                    if ("Clothes".equals(productType) && (size < 36 || size > 50)) {
+                        showAlert("Invalid Size", "Size must be between 36 and 50 for Clothes.", Alert.AlertType.WARNING);
+                        return null; // Stop processing if size is out of range
+                    }
+
+                    details.put("Size", String.valueOf(size));
+                }
+
+                details.put("Price", priceField.getText());
+                details.put("Quantity", quantityField.getText());
             }
-            if("Clothes".equals(productType) && (Integer.parseInt(sizeResult.get()) < 36 || Integer.parseInt(sizeResult.get()) > 50)){
-                showAlert("Canceled", "Size is under 36 or above 50.", Alert.AlertType.WARNING);
-                return null;
-            }
-            details.put("Size", String.valueOf(Integer.parseInt(sizeResult.get()) ) );
-        }
+            return details;
+        });
 
-        textInputDialog.setContentText("Enter " + productType + " Price:");
-        Optional<String> priceResult = textInputDialog.showAndWait();
-        if (priceResult.isEmpty() || !isValidNumericInput(priceResult.get())) {
-            return null;
-        }
-        details.put("Price", String.valueOf(Double.parseDouble(priceResult.get())));
+        // Show the dialog and wait for the user's input
+        Optional<Map<String, String>> result = buyDialog.showAndWait();
 
-        textInputDialog.setContentText("Enter " + productType + " Quantity:");
-        Optional<String> quantityResult = textInputDialog.showAndWait();
-        if (quantityResult.isEmpty() || !isValidNumericInput(quantityResult.get())) {
-            // Handle invalid input, show a message, and ask the user to correct it
-            return null;
-        }
-        details.put("Quantity", String.valueOf(Integer.parseInt(quantityResult.get())));
-
-        return details;
+        return result.orElse(new HashMap<>());
     }
 
-
     /*************Find product*****************/
-    public int askForProductID(ShoppingCartController controller){
-        textInputDialog.setTitle("Check Product");
-        textInputDialog.setContentText("Enter ID Product:");
+    public int askForProductID(ShoppingCartController controller) {
+        // Create a dialog
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Check Product");
+        dialog.setContentText("Enter ID Product:");
 
-        Optional<String> idResult = textInputDialog.showAndWait();
+        // Show the dialog and wait for the user's response
+        Optional<String> idResult = dialog.showAndWait();
 
-        if (idResult.isEmpty() || !isValidNumericInput(idResult.get()) || controller.checkIdProduct(Integer.parseInt(idResult.get()) ) ==null) {
-            showAlert("Invalid Input", "Please enter a valid ID for the product.", Alert.AlertType.ERROR);
+        if (idResult.isEmpty() || !isValidNumericInput(idResult.get()) || controller.checkIdProduct(Integer.parseInt(idResult.get())) == null) {
             return 0; // Default value in case of invalid input
         }
 
@@ -274,33 +320,76 @@ public class ShoppingCartView {
 
     /*************Modify product =>Price & quantity*****************/
 
-    public Map<String, String> askForModificationDetails() {
-        // Create a map to store the modified values
+    public Map<String, String> askForModificationDetails(ShoppingCartController controller) {
         Map<String, String> details = new HashMap<>();
 
-        textInputDialog.setTitle("Product Modification");
-        textInputDialog.setHeaderText(null);
-
-        // Prompt the user for the new quantity
-        textInputDialog.setContentText("Enter new quantity:");
-        Optional<String> quantityResult = textInputDialog.showAndWait();
-        if (!isValidNumericInput(quantityResult.get())) {
-            showAlert("Invalid Input", "Please enter a valid quantity.", Alert.AlertType.ERROR);
-            return null; // User canceled the modification or provided invalid input
+        // Ask for the product ID
+        int productId = askForProductID(controller);
+        if (productId == 0) {
+            // User canceled or provided an invalid ID
+            return null;
         }
-        details.put("Quantity", quantityResult.get());
 
-        // Prompt the user for the new price
-        textInputDialog.setContentText("Enter new price:");
-        Optional<String> priceResult = textInputDialog.showAndWait();
-        if (!isValidNumericInput(priceResult.get())) {
-            showAlert("Invalid Input", "Please enter a valid price.", Alert.AlertType.ERROR);
-            return null; // User canceled the modification or provided invalid input
-        }
-        details.put("Price", priceResult.get());
+        // Create a dialog
+        Dialog<Map<String, String>> dialog = new Dialog<>();
+        dialog.setTitle("Product Modification");
+        dialog.setHeaderText(null);
 
-        return details;
+        // Set the button types
+        ButtonType confirmButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(confirmButtonType, ButtonType.CANCEL);
+
+        // Create the layout and add components
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        TextField quantityField = new TextField();
+        TextField priceField = new TextField();
+
+        grid.add(new Label("Quantity:"), 0, 0);
+        grid.add(quantityField, 1, 0);
+
+        grid.add(new Label("Price:"), 0, 1);
+        grid.add(priceField, 1, 1);
+
+        // Enable/Disable OK button depending on whether a quantity and price are entered
+        Node confirmButton = dialog.getDialogPane().lookupButton(confirmButtonType);
+        confirmButton.setDisable(true);
+
+        // Validation logic
+        quantityField.textProperty().addListener((observable, oldValue, newValue) -> {
+            confirmButton.setDisable(!isValidNumericInput(newValue) || priceField.getText().trim().isEmpty());
+        });
+
+        priceField.textProperty().addListener((observable, oldValue, newValue) -> {
+            confirmButton.setDisable(newValue.trim().isEmpty() || !isValidNumericInput(newValue) || quantityField.getText().trim().isEmpty());
+        });
+
+        // Set the dialog content
+        dialog.getDialogPane().setContent(grid);
+
+        // Request focus on the quantity field by default
+        Platform.runLater(quantityField::requestFocus);
+
+        // Convert the result to a key-value pair when the OK button is clicked
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == confirmButtonType) {
+                details.put("Product ID", String.valueOf(productId));
+                details.put("Quantity", quantityField.getText());
+                details.put("Price", priceField.getText());
+                return details;
+            }
+            return null;
+        });
+
+        // Show the dialog and wait for the user's response
+        Optional<Map<String, String>> result = dialog.showAndWait();
+
+        return result.orElse(null);
     }
+
 
     /******************************/
 
@@ -335,9 +424,11 @@ public class ShoppingCartView {
 
     private VBox createBasketView(ShoppingCartController controller) {
         // Labels to display total income and total outcome
+        Label capitalLabel = new Label();
         Label totalIncomeLabel = new Label();
         Label totalOutcomeLabel = new Label();
 
+        capitalLabel.textProperty().bind(controller.getModel().capitalProperty().asString("Capital: $%.2f"));
         totalIncomeLabel.textProperty().bind(controller.getModel().totalIncomeProperty().asString("Total Income: $%.2f"));
         totalOutcomeLabel.textProperty().bind(controller.getModel().totalOutcomeProperty().asString("Total Outcome: $%.2f"));
 
@@ -345,7 +436,7 @@ public class ShoppingCartView {
         Button sellButton = new Button("Sell Product");
 
         HBox labelHBox = new HBox(20);
-        labelHBox.getChildren().addAll(totalOutcomeLabel, totalIncomeLabel);
+        labelHBox.getChildren().addAll(capitalLabel,totalOutcomeLabel, totalIncomeLabel);
 
         HBox buttonsHBox = new HBox(30);
         buttonsHBox.getChildren().addAll(buyButton, sellButton);
@@ -354,7 +445,7 @@ public class ShoppingCartView {
         sellButton.setMinWidth(100); // Set a fixed size for all buttons
 
         buyButton.setOnAction(event -> controller.buyProduct());
-        //sellButton.setOnAction(event -> handleSellButtonClick(controller));
+        sellButton.setOnAction(event -> controller.sellProduct());
 
         ListView<String> listView = new ListView<>();
 
@@ -394,10 +485,10 @@ public class ShoppingCartView {
                 sizeLabel = new Label("Size: " + clothes.getSize() + " | ");
             }
 
-            Label priceLabel = new Label("Price: " + transaction.getPrice() +" | ");
+            Label priceLabel = new Label("Price: " + transaction.getPrice() +"$ | ");
             Label quantityLabel = new Label("Quantity: " + transaction.getNbItems() + " | ");
 
-            transactionWithButton.getChildren().addAll(nameLabel, sizeLabel, priceLabel, quantityLabel);
+            transactionWithButton.getChildren().addAll(nameLabel, sizeLabel, quantityLabel, priceLabel);
             transactionListWithButtons.add(transactionWithButton);
         }
         basketListView.getItems().setAll(transactionListWithButtons);
@@ -415,7 +506,8 @@ public class ShoppingCartView {
         VBox.setMargin(confirmButtonBox, new Insets(10,10,10,10));
         Button confirmButton = new Button("Confirm transaction");
         confirmButton.setOnAction(event -> {
-            // Handle confirming all transactions
+            controller.getModel().confirmTransaction();
+            basketListView.getItems().clear();
         });
         confirmButtonBox.setAlignment(Pos.CENTER);
         confirmButtonBox.getChildren().addAll(confirmButton);
@@ -427,51 +519,161 @@ public class ShoppingCartView {
     public Map<String, String> handleBuyButtonClick(String productType) {
         Map<String, String> details = new HashMap<>();
 
-        details.put("Type", productType);
+        // Create a custom dialog
+        Dialog<Map<String, String>> buyDialog = new Dialog<>();
+        buyDialog.setTitle("Buy " + productType);
+        buyDialog.setHeaderText("Enter " + productType + " details for purchase:");
 
-        textInputDialog.setTitle("Enter " + productType + " Details");
+        // Set the button types
+        ButtonType buyButtonType = new ButtonType("Buy", ButtonBar.ButtonData.OK_DONE);
+        buyDialog.getDialogPane().getButtonTypes().addAll(buyButtonType, ButtonType.CANCEL);
 
-        textInputDialog.setContentText("Enter " + productType + " Name:");
-        Optional<String> nameResult = textInputDialog.showAndWait();
-        if (nameResult.isEmpty()) {
-            return null;
-        }
-        details.put("Name", nameResult.get());
+        // Create the form GridPane
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
 
+        // Add form fields
+        TextField nameField = new TextField();
+        nameField.setPromptText(productType + " Name");
 
-        // Additional details for Shoes and Clothes
+        TextField sizeField = new TextField();
+        sizeField.setPromptText(productType + " Size");
+
+        TextField priceField = new TextField();
+        priceField.setPromptText(productType + " Price");
+
+        TextField quantityField = new TextField();
+        quantityField.setPromptText(productType + " Quantity");
+
+        grid.add(new Label(productType + " Name:"), 0, 0);
+        grid.add(nameField, 1, 0);
+
         if ("Shoes".equals(productType) || "Clothes".equals(productType)) {
-            textInputDialog.setContentText("Enter " + productType + " Size:");
-            Optional<String> sizeResult = textInputDialog.showAndWait();
-            if (sizeResult.isEmpty() || !isValidNumericInput(sizeResult.get())) {
-                // Handle invalid input, show a message, and ask the user to correct it
-                return null;
+            grid.add(new Label(productType + " Size:"), 0, 1);
+            grid.add(sizeField, 1, 1);
+        }
+
+        grid.add(new Label(productType + " Price:"), 0, 2);
+        grid.add(priceField, 1, 2);
+
+        grid.add(new Label(productType + " Quantity:"), 0, 3);
+        grid.add(quantityField, 1, 3);
+
+        // Enable/Disable button depending on whether all fields are filled
+        Node buyButton = buyDialog.getDialogPane().lookupButton(buyButtonType);
+        buyButton.setDisable(true);
+
+        // Do some validation
+        nameField.textProperty().addListener((observable, oldValue, newValue) -> {
+            buyButton.setDisable(newValue.trim().isEmpty());
+        });
+
+        buyDialog.getDialogPane().setContent(grid);
+
+        // Convert the result to a map when the buy button is clicked
+        buyDialog.setResultConverter(dialogButton -> {
+            if (dialogButton == buyButtonType) {
+                details.put("Type", productType);
+                details.put("Name", nameField.getText());
+
+                if ("Shoes".equals(productType) || "Clothes".equals(productType)) {
+                    String sizeInput = sizeField.getText();
+                    if (!isValidNumericInput(sizeInput)) {
+                        showAlert("Invalid Input", "Please enter a valid numeric size.", Alert.AlertType.WARNING);
+                        return null; // Stop processing if size is invalid
+                    }
+
+                    int size = Integer.parseInt(sizeInput);
+                    if ("Clothes".equals(productType) && (size < 36 || size > 50)) {
+                        showAlert("Invalid Size", "Size must be between 36 and 50 for Clothes.", Alert.AlertType.WARNING);
+                        return null; // Stop processing if size is out of range
+                    }
+
+                    details.put("Size", String.valueOf(size));
+                }
+
+                details.put("Price", priceField.getText());
+                details.put("Quantity", quantityField.getText());
+                details.put("Transaction", "Buy");
             }
-            if("Clothes".equals(productType) && (Integer.parseInt(sizeResult.get()) < 36 || Integer.parseInt(sizeResult.get()) > 50)){
-                showAlert("Canceled", "Size is under 36 or above 50.", Alert.AlertType.WARNING);
-                return null;
-            }
-            details.put("Size", String.valueOf(Integer.parseInt(sizeResult.get()) ) );
-        }
+            return details;
+        });
 
-        textInputDialog.setContentText("Enter " + productType + " Price:");
-        Optional<String> priceResult = textInputDialog.showAndWait();
-        if (priceResult.isEmpty() || !isValidNumericInput(priceResult.get())) {
-            return null;
-        }
-        details.put("Price", String.valueOf(Double.parseDouble(priceResult.get())));
+        // Show the dialog and wait for the user's input
+        Optional<Map<String, String>> result = buyDialog.showAndWait();
 
-        textInputDialog.setContentText("Enter " + productType + " Quantity:");
-        Optional<String> quantityResult = textInputDialog.showAndWait();
-        if (quantityResult.isEmpty() || !isValidNumericInput(quantityResult.get())) {
-            // Handle invalid input, show a message, and ask the user to correct it
-            return null;
-        }
-        details.put("Quantity", String.valueOf(Integer.parseInt(quantityResult.get())));
-
-        return details;
+        return result.orElse(new HashMap<>());
     }
 
+    public Map<String, String> handleSellButtonClick(ShoppingCartController controller) {
+        Map<String, String> details = new HashMap<>();
+
+        int productId = askForProductID(controller);
+        if (productId == 0) {
+            return null;
+        }
+
+        // Create a custom dialog
+        Dialog<Map<String, String>> sellDialog = new Dialog<>();
+        sellDialog.setTitle("Product Sale");
+        sellDialog.setHeaderText("Enter product details for sale:");
+
+        // Set the button types
+        ButtonType sellButtonType = new ButtonType("Sell", ButtonBar.ButtonData.OK_DONE);
+        sellDialog.getDialogPane().getButtonTypes().addAll(sellButtonType, ButtonType.CANCEL);
+
+        // Create the form GridPane
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
+
+        // Add form fields
+        TextField quantityField = new TextField();
+        quantityField.setPromptText("Quantity");
+
+        grid.add(new Label("Quantity:"), 0, 0);
+        grid.add(quantityField, 1, 0);
+
+        // Enable/Disable button depending on whether a quantity is entered
+        Node sellButton = sellDialog.getDialogPane().lookupButton(sellButtonType);
+        sellButton.setDisable(true);
+
+        // Do some validation
+        quantityField.textProperty().addListener((observable, oldValue, newValue) -> {
+            sellButton.setDisable(newValue.trim().isEmpty() || !isValidNumericInput(newValue) || Integer.parseInt(newValue) <= 0);
+        });
+
+        sellDialog.getDialogPane().setContent(grid);
+
+        // Convert the result to a map when the sell button is clicked
+        sellDialog.setResultConverter(dialogButton -> {
+            details.put("ID", String.valueOf(productId));
+            if (dialogButton == sellButtonType) {
+                String quantityText = quantityField.getText();
+                if (isValidNumericInput(quantityText)) {
+                    int quantity = Integer.parseInt(quantityText);
+                    if (quantity > 0) {
+                        details.put("Quantity", quantityText);
+                    } else {
+                        showAlert("Invalid Input", "Please enter a quantity greater than 0.", Alert.AlertType.ERROR);
+                        return null; // Don't proceed with the sale if quantity is not greater than 0
+                    }
+                } else {
+                    showAlert("Invalid Input", "Please enter a valid quantity.", Alert.AlertType.ERROR);
+                    return null; // Don't proceed with the sale if quantity is not a valid number
+                }
+            }
+            details.put("Transaction", "Sale");
+            return details;
+        });
+
+        Optional<Map<String, String>> result = sellDialog.showAndWait();
+
+        return result.orElse(new HashMap<>());
+    }
 
 
 }

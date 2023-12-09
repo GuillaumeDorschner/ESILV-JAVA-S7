@@ -1,11 +1,10 @@
 package com.example.womenstore.model;
+
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-
 import com.example.womenstore.DatabaseConnection;
-
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -13,18 +12,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.sql.Timestamp;
-import com.example.womenstore.model.*;
-
-
-import com.example.womenstore.DatabaseConnection;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-
+import java.util.Objects;
 
 public class ShoppingCartModel {
 
@@ -34,11 +23,20 @@ public class ShoppingCartModel {
     private final DoubleProperty totalIncomeProperty = new SimpleDoubleProperty();
     private final DoubleProperty totalOutcomeProperty = new SimpleDoubleProperty();
 
+    private final DoubleProperty capitalProperty = new SimpleDoubleProperty();
+
     public ShoppingCartModel() {
         products = FXCollections.observableArrayList();
         basket = FXCollections.observableArrayList();
         transactions = FXCollections.observableArrayList();
         initializeProducts();
+
+        capitalProperty.set(20000);
+
+        totalIncomeProperty.addListener((observable, oldValue, newValue) -> updateCapital());
+        totalOutcomeProperty().addListener((observable, oldValue, newValue) -> updateCapital());
+
+        updateCapital();
     }
 
     private void initializeProducts() {
@@ -53,39 +51,10 @@ public class ShoppingCartModel {
         return basket;
     }
 
-    public double getTotalIncome() {
-        return totalIncomeProperty.get();
-    }
+    /*******************/
 
     public DoubleProperty totalIncomeProperty() {
         return totalIncomeProperty;
-    }
-
-    public double calculateTotalPrice() {
-        double totalPrice = 0;
-        for (Product product : basket) {
-            totalPrice += product.getPrice();
-        }
-        return totalPrice;
-    }
-
-    public Product checkID(int id){
-        for(Product p : products){
-            if(p.getId()==id){
-                return p;
-            }
-        }
-        return null;
-    }
-
-    public void addToBasket(Product product) {
-        basket.add(product);
-    }
-
-    
-    public void sellShoppingCart(){
-        sellFromDatabase();
-        // reload fonction total incom
     }
 
     public double getTotalOutcome() {
@@ -94,6 +63,28 @@ public class ShoppingCartModel {
 
     public DoubleProperty totalOutcomeProperty() {
         return totalOutcomeProperty;
+    }
+
+    /*******************/
+
+    public DoubleProperty capitalProperty() {
+        return capitalProperty;
+    }
+
+    private void updateCapital() {
+        double capital = capitalProperty.get() + totalIncomeProperty.get() - totalOutcomeProperty.get();
+        capitalProperty.set(capital);
+    }
+
+    /*******************/
+
+    public Product checkID(int id){
+        for(Product p : products){
+            if(p.getId()==id){
+                return p;
+            }
+        }
+        return null;
     }
 
     public void addToProducts(String type, String name, double price, int quantity, int size){
@@ -133,12 +124,13 @@ public class ShoppingCartModel {
             modifyProductToDB(p);
         }
     }
-
     
     public void removeProduct(Product p){
         products.remove(p);
         deleteProductFromDB(p);
     }
+
+    /********DATABSE********/
 
     public void addProductToDB(Product p) {
 
@@ -227,7 +219,6 @@ public class ShoppingCartModel {
         }
     }
 
-
     public void fetchProductsFromDatabase() {
         ObservableList<Product> newProduct = FXCollections.observableArrayList();
         String sql = "SELECT * FROM Product";
@@ -269,9 +260,8 @@ public class ShoppingCartModel {
         products = newProduct;
     }
 
-    
     public void sellFromDatabase() {
-        double totalSaleAmount = calculateTotalPrice();
+        double totalSaleAmount = getTotalOutcome();
         if (totalSaleAmount == 0) return;
 
         String transactionSql = "INSERT INTO Transaction (total) VALUES (?)";
@@ -316,6 +306,7 @@ public class ShoppingCartModel {
         }
     }
 
+    /****************/
 
     public void fecthTransactionsFromDatabase() {
         ObservableList<Transactions> newTransactions = FXCollections.observableArrayList();
@@ -329,10 +320,10 @@ public class ShoppingCartModel {
 
             while (resultSet.next()) {
                 int id = resultSet.getInt("id");
-                Timestamp time = resultSet.getTimestamp("time");
                 double total = resultSet.getDouble("total");
+                String type = resultSet.getString("type");
 
-                Transactions transaction = new Transactions(id, time, total);
+                Transactions transaction = new Transactions(id, total, type);
                 newTransactions.add(transaction);
             }
         } catch (SQLException e) {
@@ -341,7 +332,8 @@ public class ShoppingCartModel {
         transactions = newTransactions;
     }
 
-    
+    /****************/
+
     public void applyDiscount(Product p) {
         p.applyDiscount();
     }
@@ -353,19 +345,61 @@ public class ShoppingCartModel {
 
     /********Buying and selling =>basket list********/
 
-    public void buying(String type, String name, double price, int quantity, int size){
+    public void buying(String type, String name, double price, int quantity, int size, String typeT){
         if(type.equals("Shoes")){
             Product shoes = new Shoes(name,price,quantity,size);
+            shoes.purchase(quantity);
             this.basket.add(shoes);
+            Transactions tr = new Transactions(shoes.getId(), shoes.getPrice(), typeT);
+            transactions.add(tr);
         }
         else if(type.equals("Clothes")){
             Product clothes = new Clothes(name,price,quantity,size);
+            clothes.purchase(quantity);
             this.basket.add(clothes);
+            Transactions tr = new Transactions(clothes.getId(), clothes.getPrice(), typeT);
+            transactions.add(tr);
         }
         else{
             Product accessories = new Accessories(name,price,quantity);
+            accessories.purchase(quantity);
             this.basket.add(accessories);
+            Transactions tr = new Transactions(accessories.getId(), accessories.getPrice(), typeT);
+            transactions.add(tr);
+        }
+    }
+
+    public void selling(int id, int quantity, String transaction) {
+        for (Product p : products){
+            if(p.getId()==id){
+                p.sell(quantity);
+                Transactions tr = new Transactions(p.getId(), p.getPrice()* p.getNbItems(), transaction);
+                transactions.add(tr);
+            }
         }
 
+        for (Product p : products){
+            if(p.getId()==id){
+                p.purchase(quantity);
+                basket.add(p);
+            }
+        }
+        sellFromDatabase();
+
     }
+
+    public void confirmTransaction() {
+        for (Transactions t : transactions) {
+            if (Objects.equals(t.getType(), "Buy")) {
+                totalOutcomeProperty.set(totalOutcomeProperty.get() + t.getTotal());
+                System.out.println("Buy Transaction - New Total Outcome: " + totalOutcomeProperty.get());
+            } else {
+                totalIncomeProperty.set(totalIncomeProperty.get() + t.getTotal());
+                System.out.println("Sell Transaction - New Total Income: " + totalIncomeProperty.get());
+            }
+        }
+    }
+
+
+
 }

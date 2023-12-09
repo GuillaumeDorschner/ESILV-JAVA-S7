@@ -3,12 +3,8 @@ package com.example.womenstore;
 import com.example.womenstore.model.ShoppingCartModel;
 import com.example.womenstore.view.ShoppingCartView;
 import com.example.womenstore.controller.ShoppingCartController;
-import com.example.womenstore.DatabaseConnection;
 import javafx.application.Application;
 import javafx.stage.Stage;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class ShopApplication extends Application {
     @Override
@@ -19,7 +15,6 @@ public class ShopApplication extends Application {
         ShoppingCartController controller = new ShoppingCartController(model, view);
 
     }
-
 
     public static void main(String[] args) {launch(args);}
 }

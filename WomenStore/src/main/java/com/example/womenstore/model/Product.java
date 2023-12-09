@@ -29,10 +29,6 @@ public abstract class Product implements Discount, Comparable<Product> {
     this.nbItems = nbItems;
   }
 
-  public static double getIncome() {
-    return income;
-  }
-
   public void sell(int soldItems) throws IllegalArgumentException {
     if (soldItems <= this.nbItems) {
       this.setNbItems(this.nbItems - soldItems);
@@ -58,10 +54,6 @@ public abstract class Product implements Discount, Comparable<Product> {
 
   public String getName() {
     return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
   }
 
   public DoubleProperty priceProperty() {
@@ -99,8 +91,6 @@ public abstract class Product implements Discount, Comparable<Product> {
   }
 
   public abstract String getCategory();
-
-  public abstract boolean isDiscountApplied();
 
   @Override
   public int compareTo(Product o) {
