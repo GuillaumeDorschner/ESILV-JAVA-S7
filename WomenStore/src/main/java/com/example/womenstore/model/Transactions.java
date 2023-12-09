@@ -4,13 +4,13 @@ import java.sql.Timestamp;
 
 public class Transactions {
     private int id;
-    private Timestamp time;
     private double total;
+    private String type;
 
-    public Transactions(int id, Timestamp time, double total) {
+    public Transactions(int id, double total, String type) {
         this.id = id;
-        this.time = time;
         this.total = total;
+        this.type = type;
     }
 
     // Getters and setters
@@ -22,19 +22,18 @@ public class Transactions {
         this.id = id;
     }
 
-    public Timestamp getTime() {
-        return time;
-    }
-
-    public void setTime(Timestamp time) {
-        this.time = time;
-    }
-
     public double getTotal() {
         return total;
     }
 
     public void setTotal(double total) {
         this.total = total;
+    }
+
+    public String getType(){
+        return type;
+    }
+    public void  setType(String t){
+        type=t;
     }
 }

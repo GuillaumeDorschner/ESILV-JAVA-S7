@@ -4,9 +4,6 @@ import com.example.womenstore.model.*;
 import com.example.womenstore.view.ShoppingCartView;
 import java.util.ArrayList;
 import java.util.List;
-
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Alert;
 import java.util.Map;
 
@@ -93,7 +90,7 @@ public class ShoppingCartController{
         int id = view.askForProductID(this);
         String category = checkIdProduct(id).getCategory();
         model.removeProduct(checkIdProduct(id));
-        showProductCategory(checkIdProduct(id).getCategory());
+        showProductCategory(category);
         view.showAlert("Success", "Product deleted successfully!", Alert.AlertType.INFORMATION);
 
     }
@@ -103,7 +100,7 @@ public class ShoppingCartController{
     public void modifyProduct() {
         int id = view.askForProductID(this);
 
-        Map<String, String> productNewDetails = view.askForModificationDetails();
+        Map<String, String> productNewDetails = view.askForModificationDetails(this);
 
         if(productNewDetails!=null){
             double price = Double.parseDouble(productNewDetails.get("Price"));
@@ -148,6 +145,7 @@ public class ShoppingCartController{
                 double price = Double.parseDouble(productDetails.get("Price"));
                 int quantity = Integer.parseInt(productDetails.get("Quantity"));
                 String type = productDetails.get("Type");
+                String transaction = productDetails.get("Transaction");
                 int size;
                 if(productDetails.get("Size")==null){
                     size=0;
@@ -156,7 +154,7 @@ public class ShoppingCartController{
                     size = Integer.parseInt(productDetails.get("Size"));
                 }
 
-                model.buying(type,name,price,quantity,size);
+                model.buying(type,name,price,quantity,size,transaction);
                 showProductTransaction();
 
             } else {
@@ -164,5 +162,28 @@ public class ShoppingCartController{
             }
         }
 
+    }
+
+    public void sellProduct(){
+        Map<String, String> details = view.handleSellButtonClick(this);
+        if (details != null) {
+
+            int id = Integer.parseInt(details.get("ID"));
+            int quantity = Integer.parseInt(details.get("Quantity"));
+            String transaction = details.get("Transaction");
+
+            if(checkIdProduct(id).getNbItems()>=quantity){
+                model.selling(id,quantity,transaction);
+                showProductTransaction();
+                view.showAlert("Success", "Product Transaction successfully!", Alert.AlertType.INFORMATION);
+            }
+            else{
+                view.showAlert("Canceled", "Product quantity not enough.", Alert.AlertType.WARNING);
+            }
+
+
+        } else {
+            view.showAlert("Canceled", "Product Transaction canceled.", Alert.AlertType.WARNING);
+        }
     }
 }
