@@ -10,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.sql.Timestamp;
 import java.sql.PreparedStatement;
@@ -18,8 +19,7 @@ import java.util.Objects;
 public class ShoppingCartModel {
 
     private ObservableList<Product> products;
-    private ObservableList<Product> basket;
-    private ObservableList<Transactions> transactions;
+    private final ObservableList<Transactions> transactions;
     private final DoubleProperty totalIncomeProperty = new SimpleDoubleProperty();
     private final DoubleProperty totalOutcomeProperty = new SimpleDoubleProperty();
 
@@ -27,7 +27,6 @@ public class ShoppingCartModel {
 
     public ShoppingCartModel() {
         products = FXCollections.observableArrayList();
-        basket = FXCollections.observableArrayList();
         transactions = FXCollections.observableArrayList();
         initializeProducts();
 
@@ -46,9 +45,8 @@ public class ShoppingCartModel {
     public ObservableList<Product> getProducts() {
         return products;
     }
-
-    public ObservableList<Product> getBasket() {
-        return basket;
+    public ObservableList<Transactions> getTransactions() {
+        return transactions;
     }
 
     /*******************/
@@ -64,8 +62,6 @@ public class ShoppingCartModel {
     public DoubleProperty totalOutcomeProperty() {
         return totalOutcomeProperty;
     }
-
-    /*******************/
 
     public DoubleProperty capitalProperty() {
         return capitalProperty;
@@ -279,7 +275,6 @@ public class ShoppingCartModel {
                 if (generatedKeys.next()) {
                     int transactionId = generatedKeys.getInt(1);
                     updateProductsInDatabase();
-                    basket.clear();
                 } else {
                     throw new SQLException("Creating transaction failed, no ID obtained.");
                 }
@@ -287,18 +282,18 @@ public class ShoppingCartModel {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        fecthTransactionsFromDatabase();
+        fetchTransactionsFromDatabase();
     }
 
     private void updateProductsInDatabase() {
-        for(Product p : basket){
+        for(Transactions p : transactions){
             String updateProductSql = "UPDATE Product SET nbItems = nbItems - ? WHERE id = ?";
 
             try (Connection connection = DatabaseConnection.getConnection();
                  PreparedStatement preparedStatement = connection.prepareStatement(updateProductSql)) {
 
-                preparedStatement.setInt(1, p.getNbItems());
-                preparedStatement.setInt(2, p.getId());
+                preparedStatement.setInt(1, p.getProduct().getNbItems());
+                preparedStatement.setInt(2, p.getProduct().getId());
                 preparedStatement.executeUpdate();
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -306,30 +301,32 @@ public class ShoppingCartModel {
         }
     }
 
-    /****************/
-
-    public void fecthTransactionsFromDatabase() {
+    public void fetchTransactionsFromDatabase() {
         ObservableList<Transactions> newTransactions = FXCollections.observableArrayList();
         String sql = "SELECT * FROM Transaction";
 
         try (Connection connection = DatabaseConnection.getConnection();
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql)) {
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
 
-            transactions.clear();
+            newTransactions.clear();
 
             while (resultSet.next()) {
-                int id = resultSet.getInt("id");
-                double total = resultSet.getDouble("total");
                 String type = resultSet.getString("type");
+                int product_id = resultSet.getInt("product_id"); // Ajout de la colonne product_id
 
-                Transactions transaction = new Transactions(id, total, type);
-                newTransactions.add(transaction);
+                for (Product p : products){
+                    if(p.getId()==product_id){
+                        Transactions transaction = new Transactions(p,type ); /* Ajoutez d'autres informations du produit ici */
+                        transactions.add(transaction);
+                    }
+                }
+
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        transactions = newTransactions;
+
     }
 
     /****************/
@@ -349,55 +346,56 @@ public class ShoppingCartModel {
         if(type.equals("Shoes")){
             Product shoes = new Shoes(name,price,quantity,size);
             shoes.purchase(quantity);
-            this.basket.add(shoes);
-            Transactions tr = new Transactions(shoes.getId(), shoes.getPrice(), typeT);
+
+            Transactions tr = new Transactions(shoes, typeT);
             transactions.add(tr);
         }
         else if(type.equals("Clothes")){
             Product clothes = new Clothes(name,price,quantity,size);
             clothes.purchase(quantity);
-            this.basket.add(clothes);
-            Transactions tr = new Transactions(clothes.getId(), clothes.getPrice(), typeT);
+
+            Transactions tr = new Transactions(clothes, typeT);
             transactions.add(tr);
         }
         else{
             Product accessories = new Accessories(name,price,quantity);
             accessories.purchase(quantity);
-            this.basket.add(accessories);
-            Transactions tr = new Transactions(accessories.getId(), accessories.getPrice(), typeT);
+
+            Transactions tr = new Transactions(accessories, typeT);
             transactions.add(tr);
         }
     }
 
     public void selling(int id, int quantity, String transaction) {
-        for (Product p : products){
-            if(p.getId()==id){
-                p.sell(quantity);
-                Transactions tr = new Transactions(p.getId(), p.getPrice()* p.getNbItems(), transaction);
+        Iterator<Product> iterator = products.iterator();
+
+        while (iterator.hasNext()) {
+            Product p = iterator.next();
+
+            if (p.getId() == id) {
+                p.sell(quantity);//la liste product
+                Transactions tr = new Transactions(p, transaction);
+                tr.getProduct().setNbItems(quantity);//la liste transaction
                 transactions.add(tr);
             }
         }
 
-        for (Product p : products){
-            if(p.getId()==id){
-                p.purchase(quantity);
-                basket.add(p);
-            }
-        }
         sellFromDatabase();
-
     }
+
 
     public void confirmTransaction() {
         for (Transactions t : transactions) {
             if (Objects.equals(t.getType(), "Buy")) {
-                totalOutcomeProperty.set(totalOutcomeProperty.get() + t.getTotal());
+                totalOutcomeProperty.set(totalOutcomeProperty.get() + t.getProduct().getPrice()*t.getProduct().getNbItems());
                 System.out.println("Buy Transaction - New Total Outcome: " + totalOutcomeProperty.get());
-            } else {
-                totalIncomeProperty.set(totalIncomeProperty.get() + t.getTotal());
+            }
+            else {
+                totalIncomeProperty.set(totalIncomeProperty.get() + t.getProduct().getPrice()*t.getProduct().getNbItems());
                 System.out.println("Sell Transaction - New Total Income: " + totalIncomeProperty.get());
             }
         }
+        transactions.clear();//nettoyer la liste quand c'est confirmer pour ne pas repeter
     }
 
 

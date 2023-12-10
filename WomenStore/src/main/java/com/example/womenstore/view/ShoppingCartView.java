@@ -44,14 +44,13 @@ public class ShoppingCartView {
         BorderPane mainLayout = new BorderPane();
 
         mainLayout.setTop(createMenuBar());
-        mainLayout.setLeft(createProductCategoryButtons(controller));
 
-        // Create a VBox to stack the action buttons above the product list
-        VBox centerLayout = new VBox();
-        centerLayout.setAlignment(Pos.TOP_CENTER);
-        centerLayout.getChildren().addAll(createProductActionButtons(controller), createProductListView());
+        // Combine left and center into a single VBox
+        VBox leftAndCenterLayout = new VBox();
+        leftAndCenterLayout.setAlignment(Pos.TOP_CENTER);
+        leftAndCenterLayout.getChildren().addAll(createProductCategoryButtons(controller), createProductActionButtons(controller), createProductListView());
 
-        mainLayout.setCenter(centerLayout);
+        mainLayout.setCenter(leftAndCenterLayout);
 
         VBox rightLayout = new VBox();
         rightLayout.getChildren().addAll(createBasketView(controller), createBasketListView(), buttonConfirm(controller));
@@ -61,6 +60,7 @@ public class ShoppingCartView {
         stage.setScene(scene);
         stage.show();
     }
+
 
     /******************************/
 
@@ -89,19 +89,6 @@ public class ShoppingCartView {
         return productTypeComboBox;
     }
 
-
-
-    private Button createProductCategoryButton(String category, ShoppingCartController controller) {
-        Button button = new Button(category);
-        button.setMinWidth(120); // Set a fixed width for all buttons
-        VBox.setMargin(button, new Insets(50, 10, 0, 10)); // Add left and right margin
-
-        // Set action for the button
-        button.setOnAction(event -> controller.showProductCategory(category));
-
-        return button;
-    }
-
     public void updateProductListView(List<Product> productDetails, ShoppingCartController controller) {
         ObservableList<HBox> productListWithDiscountButtons = FXCollections.observableArrayList();
 
@@ -113,12 +100,10 @@ public class ShoppingCartView {
             Label nameLabel = new Label("Name: " + productDetail.getName() + " | ");
             Label sizeLabel=new Label();
 
-            if(productDetail instanceof Shoes){
-                Shoes shoes = (Shoes)productDetail;
+            if(productDetail instanceof Shoes shoes){
                 sizeLabel = new Label("Size: " + shoes.getSize() + " | ");
             }
-            if(productDetail instanceof Clothes){
-                Clothes clothes = (Clothes)productDetail;
+            if(productDetail instanceof Clothes clothes){
                 sizeLabel = new Label("Size: " + clothes.getSize() + " | ");
             }
 
@@ -156,6 +141,7 @@ public class ShoppingCartView {
     }
 
     private ListView<HBox> createProductListView() {
+        VBox.setMargin(productListView, new Insets(0, 10, 10, 10));
         productListView.setPrefWidth(200);
         return productListView;
     }
@@ -436,7 +422,7 @@ public class ShoppingCartView {
         Button sellButton = new Button("Sell Product");
 
         HBox labelHBox = new HBox(20);
-        labelHBox.getChildren().addAll(capitalLabel,totalOutcomeLabel, totalIncomeLabel);
+        labelHBox.getChildren().addAll(totalOutcomeLabel, totalIncomeLabel, capitalLabel);
 
         HBox buttonsHBox = new HBox(30);
         buttonsHBox.getChildren().addAll(buyButton, sellButton);
@@ -469,26 +455,32 @@ public class ShoppingCartView {
         return basketView;
     }
 
-    public void updateListTransaction(List<Product> listTransactions, ShoppingCartController controller) {
+    public void updateListTransaction(List<Transactions> listTransactions, ShoppingCartController controller) {
         ObservableList<HBox> transactionListWithButtons = FXCollections.observableArrayList();
 
-        for (Product transaction : listTransactions) {
+        for (Transactions transaction : listTransactions) {
             HBox transactionWithButton = new HBox();
-
-            Label nameLabel = new Label("Name: " + transaction.getName() + " | ");
+            Label typeLabel = new Label("Type: " + transaction.getType() + " | ");
+            Label nameLabel = new Label("Name: " + transaction.getProduct().getName() + " | ");
+            Label priceLabel = new Label("Price: " + transaction.getProduct().getPrice() +"$ | ");
+            Label quantityLabel = new Label("Quantity: " + transaction.getProduct().getNbItems() + " | ");
             Label sizeLabel = new Label();
-            if (transaction instanceof Shoes) {
-                Shoes shoes = (Shoes) transaction;
+
+            if(transaction.getProduct() instanceof Shoes shoes){
                 sizeLabel = new Label("Size: " + shoes.getSize() + " | ");
-            } else if (transaction instanceof Clothes) {
-                Clothes clothes = (Clothes) transaction;
+            }
+            if(transaction.getProduct() instanceof Clothes clothes){
                 sizeLabel = new Label("Size: " + clothes.getSize() + " | ");
             }
 
-            Label priceLabel = new Label("Price: " + transaction.getPrice() +"$ | ");
-            Label quantityLabel = new Label("Quantity: " + transaction.getNbItems() + " | ");
+            if (transaction.getProduct() instanceof Accessories) {
+                transactionWithButton.getChildren().addAll(typeLabel,nameLabel, priceLabel, quantityLabel);
+            }
+            else
+            {
+                transactionWithButton.getChildren().addAll(typeLabel,nameLabel, sizeLabel, priceLabel, quantityLabel);
+            }
 
-            transactionWithButton.getChildren().addAll(nameLabel, sizeLabel, quantityLabel, priceLabel);
             transactionListWithButtons.add(transactionWithButton);
         }
         basketListView.getItems().setAll(transactionListWithButtons);
@@ -500,17 +492,24 @@ public class ShoppingCartView {
         return basketListView;
     }
 
-    private VBox buttonConfirm(ShoppingCartController controller) {
+    private HBox buttonConfirm(ShoppingCartController controller) {
 
-        VBox confirmButtonBox = new VBox();
-        VBox.setMargin(confirmButtonBox, new Insets(10,10,10,10));
+        HBox confirmButtonBox = new HBox();
+        HBox.setMargin(confirmButtonBox, new Insets(10,10,10,10));
+
         Button confirmButton = new Button("Confirm transaction");
+        Button cancelButton = new Button("Cancel transaction");
+
         confirmButton.setOnAction(event -> {
             controller.getModel().confirmTransaction();
+
+        });
+        cancelButton.setOnAction(actionEvent -> {
             basketListView.getItems().clear();
         });
+
         confirmButtonBox.setAlignment(Pos.CENTER);
-        confirmButtonBox.getChildren().addAll(confirmButton);
+        confirmButtonBox.getChildren().addAll(confirmButton,cancelButton);
         return confirmButtonBox;
     }
 

@@ -127,7 +127,7 @@ public class ShoppingCartController{
     /********************************/
 
     public void showProductTransaction() {
-        view.updateListTransaction(model.getBasket(),this);
+        view.updateListTransaction(model.getTransactions(),this);
     }
 
     public void buyProduct(){
@@ -161,7 +161,6 @@ public class ShoppingCartController{
                 view.showAlert("Canceled", "Product Transaction canceled.", Alert.AlertType.WARNING);
             }
         }
-
     }
 
     public void sellProduct(){
@@ -174,7 +173,10 @@ public class ShoppingCartController{
 
             if(checkIdProduct(id).getNbItems()>=quantity){
                 model.selling(id,quantity,transaction);
+
                 showProductTransaction();
+                showProductCategory(checkIdProduct(id).getCategory());
+
                 view.showAlert("Success", "Product Transaction successfully!", Alert.AlertType.INFORMATION);
             }
             else{

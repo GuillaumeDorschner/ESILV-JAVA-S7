@@ -1,39 +1,30 @@
 package com.example.womenstore.model;
 
-import java.sql.Timestamp;
-
 public class Transactions {
-    private int id;
-    private double total;
+    private Product product;
     private String type;
 
-    public Transactions(int id, double total, String type) {
-        this.id = id;
-        this.total = total;
+    public Transactions(Product p, String type) {
+        this.product=p;
         this.type = type;
     }
 
     // Getters and setters
-    public int getId() {
-        return id;
+    public Product getProduct() {
+        return product;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public double getTotal() {
-        return total;
-    }
-
-    public void setTotal(double total) {
-        this.total = total;
+    public void setProduct(Product product) {
+        this.product = product;
     }
 
     public String getType(){
         return type;
     }
+
     public void  setType(String t){
         type=t;
     }
+
+
 }
