@@ -1,4 +1,7 @@
 module com.example.womenstore {
+    requires java.sql;
+    requires java.dotenv;
+
     requires javafx.controls;
     requires javafx.fxml;
 

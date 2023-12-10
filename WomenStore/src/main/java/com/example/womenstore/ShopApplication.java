@@ -13,10 +13,7 @@ public class ShopApplication extends Application {
         ShoppingCartModel model = new ShoppingCartModel();
         ShoppingCartView view = new ShoppingCartView(primaryStage);
         ShoppingCartController controller = new ShoppingCartController(model, view);
-
     }
 
-    public static void main(String[] args) {
-        launch(args);
-    }
+    public static void main(String[] args) {launch(args);}
 }
