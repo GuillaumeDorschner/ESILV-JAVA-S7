@@ -22,7 +22,6 @@ public class ShoppingCartModel {
     private final ObservableList<Transactions> transactions;
     private final DoubleProperty totalIncomeProperty = new SimpleDoubleProperty();
     private final DoubleProperty totalOutcomeProperty = new SimpleDoubleProperty();
-
     private final DoubleProperty capitalProperty = new SimpleDoubleProperty();
 
     public ShoppingCartModel() {
