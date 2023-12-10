@@ -18,7 +18,9 @@ CREATE TABLE Product (
 CREATE TABLE Transaction (
     id INT AUTO_INCREMENT PRIMARY KEY,
     time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    total DOUBLE
+    total DOUBLE,
+    product_id INT,
+    FOREIGN KEY (product_id) REFERENCES Product(id)
 );
 
 -- insert data

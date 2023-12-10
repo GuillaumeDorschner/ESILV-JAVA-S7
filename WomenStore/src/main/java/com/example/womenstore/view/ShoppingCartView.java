@@ -443,7 +443,7 @@ public class ShoppingCartView {
         VBox.setMargin(buttonsHBox, buttonsMargins);
 
         // Ajouter le titre "Transactions"
-        Label titleLabel = new Label("Transactions");
+        Label titleLabel = new Label("Basket");
         titleLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
         VBox.setMargin(titleLabel, new Insets(10, 0, 0, 0)); // Marge en bas du titre
 

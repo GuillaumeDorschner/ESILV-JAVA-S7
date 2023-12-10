@@ -98,11 +98,11 @@ public class ShoppingCartController{
     /********************************/
 
     public void modifyProduct() {
-        int id = view.askForProductID(this);
 
         Map<String, String> productNewDetails = view.askForModificationDetails(this);
 
         if(productNewDetails!=null){
+            int id = Integer.parseInt(productNewDetails.get("Product ID"));
             double price = Double.parseDouble(productNewDetails.get("Price"));
             int quantity = Integer.parseInt(productNewDetails.get("Quantity"));
             model.modifyProduct(id,price,quantity);
